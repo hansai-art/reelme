@@ -1,0 +1,5 @@
+README.md
+Dockerfile
+.dockerignore
+gmi-shim.js
+**/*.log
