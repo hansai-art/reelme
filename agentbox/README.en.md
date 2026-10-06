@@ -114,6 +114,8 @@ Once you bring your own Facebook export, three AI features are available. In the
 | **Parallel life** 「第二人生」 | Pick a turning point and write down the road you didn't take. AI reads about forty posts around that point and imagines another film, marked as fiction. |
 | **Birth chart reading** | Optional. Enter your birth date, time and place, the page draws a Western natal chart, and AI interprets it. The parallel life uses it as character background. |
 
+Once the chart is drawn, there is one more advanced feature, still in beta: the **Life Timeline** 「人生時間軸」. It lays out the major astrological cycles of your life on a timeline, puts your own posts from each period next to them, and honestly compares the result with random dates. The parallel life also uses it to time its turning points. Details: [Life Timeline](docs/astrology.en.md).
+
 ### 2.5 Packaged for GMI Agentbox
 
 - The page, the showcase data, photos, score and parallel-life videos are packaged into one Docker image.
@@ -193,10 +195,11 @@ flowchart LR
 | Sound | Web Audio API mixing. The showcase uses the MiniMax score, and your own data gets a score generated live from your posting times. |
 | Reading the export | zip.js opens the ZIP files in the browser, with no unzipping and no upload. |
 | Birth chart | Astronomy Engine computes planet positions, using the tropical zodiac and Placidus houses, within one arcminute of Swiss Ephemeris. |
+| Life Timeline (beta) | Transits and secondary progressions, 66 interpretation rules written in advance and identical for everyone, checked against Swiss Ephemeris, 314 automated tests. [Details](docs/astrology.en.md) |
 | Self-portrait | Canvas photo mosaic. Colour correction only nudges each photo's tone toward the target; the photo itself is unchanged. |
 | Accessibility | Arrow keys choose a seat, Enter takes it, and the system's reduce-motion setting is respected. |
 
-The page needs no compiling or build step. `static/index.html` is about 440 KB, and the rest of that folder is the showcase data, photos, score and parallel-life videos.
+The page needs no compiling or build step. `static/index.html` is about 500 KB, and the rest of that folder is the showcase data, photos, score and parallel-life videos.
 
 ### 3.3 How the event cut was exported
 
@@ -212,7 +215,9 @@ The page needs no compiling or build step. `static/index.html` is about 440 KB, 
 | `gmi-shim.js` | When the page is not opened inside Claude, forwards the page's AI requests to `/api/sample`. |
 | `static/` | The cinema page and showcase assets. |
 | `Dockerfile` | Builds a linux/amd64 image that runs as an unprivileged user, with a built-in health check. |
-| `../.github/workflows/agentbox-image.yml` | On every update, starts the server to confirm it responds, then builds the image and pushes it to `ghcr.io/hansai-art/reelme-agentbox`. |
+| `tests/astro.test.mjs` | Automated tests for the chart and the Life Timeline: values checked against Swiss Ephemeris, plus 300 randomly generated birth data sets. |
+| `tools/timeline.mjs` | Command-line tool: enter anyone's birth data and it prints their Life Timeline, for comparing with astrology software. |
+| `../.github/workflows/agentbox-image.yml` | On every update, runs the astrology tests, starts the server to confirm it responds, then builds the image and pushes it to `ghcr.io/hansai-art/reelme-agentbox`. |
 
 **Long AI jobs take a ticket and come back later.** Agentbox requires requests longer than about 30 seconds to return a job id first. The last step of the AI cut often takes several minutes, so the server returns a job id immediately and calls the GMI Cloud model in the background with streaming. The page checks progress every 0.7 to 1.5 seconds and shows the text as the model writes it.
 

@@ -17,6 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test the chart and the life timeline
+        run: |
+          npm install --no-save --no-package-lock astronomy-engine@2.1.19
+          node agentbox/tests/astro.test.mjs
+          node agentbox/tools/timeline.mjs --date 1990-05-01 --time 08:30 --city 台北 --now 2026-01-01 > /dev/null
+          node agentbox/tools/timeline.mjs --date 1990-05-01 --no-time --city 倫敦 --json > /dev/null
       - name: Smoke test the server
         run: |
           cd agentbox

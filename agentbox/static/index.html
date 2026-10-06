@@ -300,6 +300,39 @@ details.howto ol{margin:8px 0 0;padding-left:1.4em;line-height:1.85}
 @media (hover:none){ .only-hover{display:none} }
 @media (hover:hover){ .only-touch{display:none} }
 @media (prefers-reduced-motion:reduce){ *{transition-duration:.01ms!important} }
+
+/* 人生時間軸 */
+.tl{--tl-structure:#C9A96E;--tl-breakthrough:#9FB3CC;--tl-transform:#B98CA6;--tl-expand:#A9C08F;--tl-dream:#8FA8C9;--tl-review:#C4BDB1;border-top:1px solid #262b33;margin-top:12px;padding-top:16px;display:flex;flex-direction:column;gap:10px;color:var(--screen)}
+.tl h3{margin:0;display:flex;align-items:center;gap:8px;font:400 18px/1.5 var(--serif);letter-spacing:.08em;color:var(--alt-hi)}
+.tl-tag{font:400 11px var(--sans);letter-spacing:.12em;color:var(--alt);border:1px solid #3d4a5c;border-radius:2px;padding:2px 6px}
+.tl-note{margin:0;color:var(--dust);font-size:12.5px;line-height:1.7}
+.tl .btn{align-self:flex-start}
+.tl-progress{height:4px;margin:2px 0 4px;background:#20262e;border-radius:3px;overflow:hidden}
+.tl-progress i{display:block;height:100%;width:0;background:var(--alt);transition:width .15s}
+.tl-summary{font-size:14px;line-height:1.8;color:var(--screen-2)}
+.tl-summary p{margin:0 0 5px}
+.tl-src{border-top:1px solid #262b33;padding-top:8px;color:var(--dust);font-size:12.5px;line-height:1.75}
+.tl-src summary{cursor:pointer;color:var(--screen-2);letter-spacing:.08em}
+.tl-src p{margin:8px 0}
+.tl-src b{color:var(--screen);font-weight:500}
+.tl-group{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.tl-group h4{margin:0;color:var(--screen-2);font:400 15px var(--serif);letter-spacing:.1em}
+.tl-group h4 small{display:block;margin-top:3px;color:var(--dust);font:12px var(--sans);letter-spacing:0}
+.tl-item{border-left:3px solid var(--tl-review);padding:7px 0 8px 11px;font-size:13.5px;line-height:1.7}
+.tl-item[data-tone="structure"]{border-color:var(--tl-structure)}
+.tl-item[data-tone="breakthrough"]{border-color:var(--tl-breakthrough)}
+.tl-item[data-tone="transform"]{border-color:var(--tl-transform)}
+.tl-item[data-tone="expand"]{border-color:var(--tl-expand)}
+.tl-item[data-tone="dream"]{border-color:var(--tl-dream)}
+.tl-item[data-tone="review"]{border-color:var(--tl-review)}
+.tl-date{color:var(--dust);font-size:12px}
+.tl-title{color:var(--screen);font-size:15px}
+.tl-title .major{margin-left:5px;border:1px solid var(--alt);padding:1px 4px;border-radius:2px;color:var(--alt);font-size:10px}
+.tl-meaning{color:var(--screen-2)}
+.tl-posts{margin-top:4px;padding-left:8px;color:var(--dust);font-size:12.5px}
+.tl-post{margin:3px 0}
+.tl-post b{color:var(--screen-2);font-weight:400}
+.tl-toggle{align-self:flex-start;color:var(--alt);background:none;border:1px solid #3d4a5c;border-radius:3px;padding:5px 8px;font-size:12px;cursor:pointer}
 </style>
 
 <canvas id="gl" tabindex="0" aria-label="3D 放映廳。每一排座位是一年，每個座位是一個月。用方向鍵選座位，Enter 入座。"></canvas>
@@ -446,6 +479,13 @@ details.howto ol{margin:8px 0 0;padding-left:1.4em;line-height:1.85}
           <div id="chartAI"></div>
           <div class="row" style="justify-content:flex-start"><button class="btn" id="bChartAI" type="button">請 GMI 模型深入解讀命格</button><button class="mini" id="bChartClear" type="button">不用星盤</button></div>
           <details class="chart-facts"><summary>完整星盤數據</summary><ul id="chartFacts"></ul></details>
+          <section class="tl" id="tlBox" hidden>
+  <h3>人生時間軸 <span class="tl-tag">進階</span></h3>
+  <p class="tl-note">把你一生的重大星象排成時間軸，每一段旁邊放上你那時候寫的貼文。</p>
+  <button class="btn alt-btn" id="bTimeline" type="button">排出我的人生時間軸</button>
+  <div class="mos-bar tl-progress" id="tlBar" hidden><i></i></div>
+  <div id="tlOut"></div>
+</section>
           <p class="alt-note">系統：西洋占星，回歸黃道，Placidus 宮位制。行星位置用 Astronomy Engine 計算，和專業占星軟體使用的 Swiss Ephemeris 比對，誤差在一角分以內；時區含歷史日光節約時間。命格說明是占星傳統的解讀，不是科學預測。</p>
         </div>
       </section>
@@ -3719,6 +3759,7 @@ function forkCandidates(Lx) {
   return out.sort((a, b) => a.ts - b.ts);
 }
 
+/* ASTRO:BEGIN */
 /* ---------- 星盤：西洋占星、回歸黃道、Placidus 宮位制 ----------
    行星位置：Astronomy Engine（與 JPL 星曆比對，誤差在一角分內）
    時區：IANA 時區資料，含台灣 1945–1979 年間的日光節約時間 */
@@ -3831,6 +3872,1608 @@ function findAspects(planets, timeKnown) {
   }
   return out.sort((x, y) => y.score - x.score);
 }
+
+/* ---------- 人生時間軸：行運與推運（GMI 模型撰寫，Claude 驗收） ---------- */
+function tlBodyKey(key) {
+  const p = PLANETS.find(x => x[0] === key);
+  return p ? p[3] : key[0].toUpperCase() + key.slice(1);
+}
+function tlBisect(fn, a, b, tol) {
+  let fa = fn(a), fb = fn(b);
+  if (!Number.isFinite(fa) || !Number.isFinite(fb) || fa * fb > 0) return null;
+  for (let i = 0; i < 60 && b - a > tol; i++) {
+    const m = (a + b) / 2, fm = fn(m);
+    if (!Number.isFinite(fm)) return null;
+    if (fm === 0) return m;
+    if (fa * fm <= 0) { b = m; fb = fm; } else { a = m; fa = fm; }
+  }
+  return (a + b) / 2;
+}
+function tlAge(ch, ms) {
+  return Math.round(((ms - ch.utc) / 86400000 / 365.2422) * 10) / 10;
+}
+function tlRulesFor(ch) {
+  const out = [];
+  const add = (body, asp, target) =>
+    out.push({ rule: `t_${body}_${asp}_${target}`, body, asp, target, kind: 'transit' });
+  const lists = {
+    jupiter: { conj: ['jupiter', 'sun', 'asc', 'mc'] },
+    saturn: {
+      conj: ['saturn', 'sun', 'moon', 'asc', 'mc'],
+      sq: ['saturn', 'sun', 'moon', 'asc', 'mc'],
+      opp: ['saturn', 'sun', 'moon', 'asc', 'mc']
+    },
+    uranus: {
+      sq: ['uranus', 'sun', 'moon', 'asc', 'mc'],
+      opp: ['uranus', 'sun', 'moon', 'asc', 'mc'],
+      conj: ['sun', 'moon', 'asc', 'mc']
+    },
+    neptune: {
+      sq: ['neptune', 'sun', 'moon', 'asc', 'mc'],
+      conj: ['sun', 'moon', 'asc', 'mc'],
+      opp: ['sun', 'moon', 'asc', 'mc']
+    },
+    pluto: {
+      sq: ['pluto', 'sun', 'moon', 'asc', 'mc'],
+      conj: ['sun', 'moon', 'asc', 'mc'],
+      opp: ['sun', 'moon', 'asc', 'mc']
+    }
+  };
+  for (const [body, aspects] of Object.entries(lists))
+    for (const [asp, targets] of Object.entries(aspects))
+      for (const target of targets)
+        if (ch.timeKnown || !['moon', 'asc', 'mc'].includes(target))
+          add(body, asp, target);
+  return out;
+}
+
+/*
+ * Shared generator: the synchronous API drains it immediately; the asynchronous
+ * API awaits a timer at every yielded checkpoint.
+ */
+function* tlLifeTimelineSteps(ch, opts = {}) {
+  const now = Number.isFinite(opts.now) ? opts.now : Date.now();
+  const cap = Date.UTC(2036, 0, 1) - 1;
+  const until = Number.isFinite(opts.until)
+    ? Math.min(opts.until, cap)
+    : Math.min(now + 5 * 365.2422 * 86400000, cap);
+  const from = ch.utc + 30 * 86400000;
+  const windows = [];
+  const natal = {};
+  for (const p of ch.planets || []) natal[p.key] = p.lon;
+  if (Number.isFinite(ch.asc)) natal.asc = ch.asc;
+  if (Number.isFinite(ch.mc)) {
+    natal.mc = ch.mc;
+    natal.ic = mod360(ch.mc + 180);
+  }
+  if (Number.isFinite(ch.asc)) natal.dsc = mod360(ch.asc + 180);
+
+  const addWindow = (rule, kind, body, target, asp, exact, start, end, sign = null) => {
+    if (!exact.length) return;
+    const major = kind === 'transit'
+      ? (rule === 't_saturn_conj_saturn' ||
+         rule === 't_saturn_opp_saturn' ||
+         rule === 't_uranus_opp_uranus' ||
+         ['saturn', 'uranus', 'neptune', 'pluto'].includes(body) &&
+           ['sun', 'moon', 'asc', 'mc'].includes(target))
+      : rule === 'p_sun_sign' || rule === 'p_moon_asc' || rule === 'p_newmoon';
+    windows.push({
+      rule, kind, body, target, asp, sign, start, end, exact,
+      passes: exact.length, major, age: tlAge(ch, exact[0])
+    });
+  };
+
+  const defs = tlRulesFor(ch);
+  const stepDays = { jupiter: 2, saturn: 3, uranus: 5, neptune: 5, pluto: 5 };
+  const stepMs = Object.fromEntries(
+    Object.entries(stepDays).map(([k, v]) => [k, v * 86400000])
+  );
+  const bodies = ['jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+
+  for (let bodyIndex = 0; bodyIndex < bodies.length; bodyIndex++) {
+    const body = bodies[bodyIndex];
+    const bodyDefs = defs.filter(x => x.body === body);
+    if (bodyDefs.length) {
+      const step = stepMs[body];
+      const count = Math.ceil(Math.max(0, until - from) / step);
+      const times = [], lons = [];
+      for (let i = 0; i <= count; i++) {
+        const t = Math.min(until, from + i * step);
+        times.push(t);
+        try { lons.push(eclLon(tlBodyKey(body), new Date(t))); }
+        catch (_) { lons.push(NaN); }
+      }
+
+      for (const d of bodyDefs) {
+        const lon = natal[d.target];
+        if (!Number.isFinite(lon)) continue;
+        const points = d.asp === 'conj'
+          ? [lon]
+          : d.asp === 'opp'
+            ? [mod360(lon + 180)]
+            : [mod360(lon + 90), mod360(lon - 90)];
+
+        for (const point of points) {
+          const fn = t => {
+            try { return angDiff(eclLon(tlBodyKey(body), new Date(t)), point); }
+            catch (_) { return NaN; }
+          };
+          const groups = [];
+          let active = false, begin = 0, minAbs = Infinity, exact = [];
+
+          for (let i = 0; i < times.length; i++) {
+            const f = Number.isFinite(lons[i]) ? angDiff(lons[i], point) : NaN;
+            const inside = Number.isFinite(f) && Math.abs(f) <= 1;
+            if (inside) {
+              if (!active) {
+                active = true;
+                begin = times[i];
+                minAbs = Infinity;
+                exact = [];
+              }
+              minAbs = Math.min(minAbs, Math.abs(f));
+            }
+            if (i && Number.isFinite(f) && Number.isFinite(lons[i - 1])) {
+              const prev = angDiff(lons[i - 1], point);
+              if (prev * f < 0 && Math.abs(prev) < 10 && Math.abs(f) < 10) {
+                const x = tlBisect(fn, times[i - 1], times[i], 3600000);
+                if (x != null) exact.push(x);
+              }
+            }
+            if (active && (!inside || i === times.length - 1)) {
+              groups.push({
+                start: begin,
+                end: inside ? times[i] : times[i - 1],
+                minAbs,
+                exact
+              });
+              active = false;
+            }
+          }
+
+          const merged = [];
+          for (const g of groups) {
+            const last = merged[merged.length - 1];
+            if (last && g.start - last.end < 400 * 86400000) {
+              last.end = g.end;
+              last.minAbs = Math.min(last.minAbs, g.minAbs);
+              last.exact.push(...g.exact);
+            } else {
+              merged.push({ ...g, exact: [...g.exact] });
+            }
+          }
+
+          for (const g of merged) {
+            if (g.start < ch.utc + 30 * 86400000) continue;
+
+            // A self-return whose first exact pass is within three years of
+            // birth is a trivial near-birth retrograde-loop hit.
+            const selfRules = new Set([
+              't_jupiter_conj_jupiter',
+              't_saturn_conj_saturn',
+              't_saturn_sq_saturn',
+              't_saturn_opp_saturn',
+              't_uranus_sq_uranus',
+              't_uranus_opp_uranus',
+              't_neptune_sq_neptune',
+              't_pluto_sq_pluto'
+            ]);
+            if (selfRules.has(d.rule) &&
+                g.exact.length &&
+                Math.min(...g.exact) < ch.utc + 3 * 365.2422 * 86400000) continue;
+            if (!g.exact.length && g.minAbs >= .3) continue;
+
+            addWindow(
+              d.rule, 'transit', body, d.target, d.asp,
+              [...new Set(g.exact)].sort((a, b) => a - b),
+              g.start, g.end
+            );
+          }
+        }
+      }
+    }
+    yield (bodyIndex + 1) / 6;
+  }
+
+  if (until >= ch.utc) {
+    const month = 30.44 * 86400000;
+    const progLon = (body, t) =>
+      eclLon(tlBodyKey(body), new Date(ch.utc + (t - ch.utc) / 365.2422));
+    const n = Math.ceil((until - ch.utc) / month);
+    if (n < 30000) {
+      let prevT = ch.utc, prevSun, prevMoon;
+      try {
+        prevSun = progLon('sun', prevT);
+        prevMoon = progLon('moon', prevT);
+      } catch (_) {}
+
+      for (let i = 1; i <= n; i++) {
+        const t = Math.min(until, ch.utc + i * month);
+        let sun, moon;
+        try {
+          sun = progLon('sun', t);
+          moon = progLon('moon', t);
+        } catch (_) { continue; }
+
+        if (Number.isFinite(prevSun) &&
+            Math.floor(prevSun / 30) !== Math.floor(sun / 30)) {
+          const sign = Math.floor(sun / 30);
+          const fn = x => angDiff(progLon('sun', x), sign * 30);
+          let exact = tlBisect(fn, prevT, t, 3 * 86400000);
+          if (exact == null) exact = t;
+          addWindow('p_sun_sign', 'progression', 'sun', null, null,
+            [exact], exact, exact, sign);
+        }
+
+        if (ch.timeKnown && Number.isFinite(prevMoon)) {
+          const targets = [
+            ['asc', ch.asc, 'p_moon_asc'],
+            ['ic', mod360(ch.mc + 180), 'p_moon_ic'],
+            ['dsc', mod360(ch.asc + 180), 'p_moon_dsc'],
+            ['mc', ch.mc, 'p_moon_mc'],
+            ['moon', natal.moon, 'p_moon_return']
+          ];
+          for (const [target, point, rule] of targets) {
+            if (!Number.isFinite(point)) continue;
+            const a = angDiff(prevMoon, point), b = angDiff(moon, point);
+            // Reject the +180/-180 wrap at the point opposite the target.
+            if (a * b < 0 && Math.abs(a) < 30 && Math.abs(b) < 30) {
+              const fn = x => angDiff(progLon('moon', x), point);
+              const exact = tlBisect(fn, prevT, t, 3 * 86400000);
+              if (exact != null)
+                addWindow(rule, 'progression', 'moon', target, 'conj',
+                  [exact], exact, exact);
+            }
+          }
+
+          const a = angDiff(prevMoon, prevSun);
+          const b = angDiff(moon, sun);
+          if (a * b < 0 && Math.abs(a) < 30 && Math.abs(b) < 30) {
+            const fn = x => angDiff(progLon('moon', x), progLon('sun', x));
+            const exact = tlBisect(fn, prevT, t, 3 * 86400000);
+            if (exact != null)
+              addWindow('p_newmoon', 'progression', 'moon', 'sun', 'conj',
+                [exact], exact, exact);
+          }
+        }
+        prevT = t;
+        prevSun = sun;
+        prevMoon = moon;
+      }
+    }
+  }
+  yield 1;
+
+  windows.sort((a, b) => a.exact[0] - b.exact[0]);
+  const occurrences = {};
+  for (const w of windows) {
+    occurrences[w.rule] = (occurrences[w.rule] || 0) + 1;
+    w.id = `${w.rule}#${occurrences[w.rule]}`;
+  }
+
+  const covFrom = Math.max(ch.utc + 15 * 365.2422 * 86400000, from);
+  const covTo = Math.min(now, until);
+  const days = Math.max(0, Math.ceil((covTo - covFrom) / 86400000));
+  let any = 0, major = 0;
+  for (let i = 0; i < days; i++) {
+    const t = covFrom + i * 86400000;
+    if (windows.some(w => t >= w.start && t <= w.end)) any++;
+    if (windows.some(w => w.major && t >= w.start && t <= w.end)) major++;
+  }
+  return {
+    windows,
+    range: { from, to: until },
+    now,
+    coverage: { any: days ? any / days : 0, major: days ? major / days : 0 }
+  };
+}
+
+function lifeTimeline(ch, opts = {}) {
+  const steps = tlLifeTimelineSteps(ch, opts);
+  while (true) {
+    const result = steps.next();
+    if (result.done) return result.value;
+  }
+}
+async function lifeTimelineAsync(ch, opts = {}, onProgress) {
+  const steps = tlLifeTimelineSteps(ch, opts);
+  let result;
+  while (true) {
+    result = steps.next();
+    if (result.done) return result.value;
+    await new Promise(r => setTimeout(r, 0));
+    if (typeof onProgress === 'function') onProgress(result.value);
+  }
+}
+function matchPosts(windows, posts, opts = {}) {
+  const bad = opts.badKinds || new Set();
+  const rules = opts.rules || (typeof TL_RULES !== 'undefined' ? TL_RULES : {});
+  const pad = (Number.isFinite(opts.padDays) ? opts.padDays : 120) * 86400000;
+  const max = Number.isFinite(opts.max) ? Math.max(0, opts.max) : 2;
+  const now = Number.isFinite(opts.now) ? opts.now : Date.now();
+
+  const eligible = (posts || [])
+    .filter(p => p && !p.hidden && !bad.has(p.kind) && p.len >= 8 && Number.isFinite(p.ts))
+    .sort((a, b) => a.ts - b.ts);
+
+  const first = eligible.length ? eligible[0].ts : Infinity;
+  const keywordCache = new Map();
+
+  const getKeywords = ruleId => {
+    const rule = rules[ruleId];
+    return rule && Array.isArray(rule.keywords) ? rule.keywords : [];
+  };
+
+  const keywordCount = (post, ruleId) => {
+    let cache = keywordCache.get(ruleId);
+    if (!cache) {
+      cache = new Map();
+      keywordCache.set(ruleId, cache);
+    }
+    if (cache.has(post)) return cache.get(post);
+
+    const clean = String(post.clean || '');
+    let count = 0;
+    for (const keyword of getKeywords(ruleId)) {
+      if (keyword && clean.includes(keyword)) count++;
+    }
+    cache.set(post, count);
+    return count;
+  };
+
+  const lowerBound = ts => {
+    let lo = 0, hi = eligible.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (eligible[mid].ts < ts) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+
+  const upperBound = ts => {
+    let lo = 0, hi = eligible.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (eligible[mid].ts <= ts) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+
+  const isHit = (post, ruleId) =>
+    post.kind === 'life' || keywordCount(post, ruleId) >= 2;
+
+  const spanHasHit = (start, end, ruleId) => {
+    const from = lowerBound(start);
+    const to = upperBound(end);
+    for (let i = from; i < to; i++) {
+      if (isHit(eligible[i], ruleId)) return true;
+    }
+    return false;
+  };
+
+  const mulberry32 = seed => {
+    let a = seed >>> 0;
+    return () => {
+      a |= 0;
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  let past = 0;
+  let withPosts = 0;
+  let hits = 0;
+  let baselineHits = 0;
+  let checked = 0;
+
+  (windows || []).forEach((w, windowIndex) => {
+    w.hit = false;
+    w.before = false;
+
+    if (w.start > now) {
+      w.posts = [];
+      w.future = true;
+      return;
+    }
+
+    if (w.end + pad < first) {
+      w.posts = [];
+      w.future = false;
+      w.before = true;
+      return;
+    }
+
+    w.future = false;
+    past++;
+
+    const spanHit = spanHasHit(w.start - pad, w.end + pad, w.rule);
+    const from = lowerBound(w.start - pad);
+    const to = upperBound(w.end + pad);
+    const candidates = [];
+
+    for (let i = from; i < to; i++) {
+      const post = eligible[i];
+      const found = keywordCount(post, w.rule);
+      const clean = String(post.clean || '');
+      const len = Number.isFinite(post.len) ? post.len : clean.length;
+      const score = (post.kind === 'life' ? 3 : 1) +
+        2 * found +
+        Math.min(len, 200) / 100;
+      const flat = String(post.flat || '');
+
+      candidates.push({
+        i: post.i,
+        ts: post.ts,
+        text: flat.length > 70 ? flat.slice(0, 70) + '…' : flat,
+        score,
+        hit: post.kind === 'life' || found >= 2
+      });
+    }
+
+    candidates.sort((a, b) =>
+      Number(b.hit) - Number(a.hit) ||
+      b.score - a.score ||
+      a.ts - b.ts
+    );
+    w.posts = candidates.slice(0, max);
+    w.hit = max === 0 ? spanHit : w.posts.some(p => p.hit);
+
+    if (w.posts.length) withPosts++;
+    if (w.hit) hits++;
+
+    if (first !== Infinity) {
+      const duration = Math.max(0, w.end - w.start + 2 * pad);
+      const latestStart = now - duration;
+      const minStart = first;
+      const maxStart = Math.max(minStart, latestStart);
+      const random = mulberry32(12345 + windowIndex);
+      let localHits = 0;
+
+      for (let sample = 0; sample < 20; sample++) {
+        const start = minStart + (maxStart - minStart) * random();
+        if (spanHasHit(start, start + duration, w.rule)) localHits++;
+      }
+
+      baselineHits += localHits;
+      checked++;
+    }
+  });
+
+  return {
+    past,
+    withPosts,
+    hits,
+    baseline: checked ? baselineHits / (checked * 20) : 0,
+    checked
+  };
+}
+const TL_RULES = {
+ "t_jupiter_conj_jupiter": {
+  "title": "木星回歸",
+  "meaning": "木星回到出生位置，常帶來新一輪的擴展與機會。這段時間可能想出國、進修或擴大生活範圍，適合為未來做樂觀的規劃。",
+  "keywords": [
+   "出國",
+   "進修",
+   "留學",
+   "遊學",
+   "旅行",
+   "新計畫",
+   "幸運",
+   "好消息",
+   "新機會",
+   "創業"
+  ],
+  "tone": "expand"
+ },
+ "t_jupiter_conj_sun": {
+  "title": "木星合太陽",
+  "meaning": "木星與本命太陽重疊，身分與方向被照亮，常有自信和成長感。這段時間容易開啟新身分、投入新領域，或得到被看見的舞台。",
+  "keywords": [
+   "新舞台",
+   "自信",
+   "機會",
+   "新身分",
+   "創業",
+   "出國",
+   "升遷",
+   "公開",
+   "發表",
+   "開始"
+  ],
+  "tone": "expand"
+ },
+ "t_jupiter_conj_asc": {
+  "title": "木星合上升",
+  "meaning": "木星與上升點重疊，人生展開新章節，個人形象變得鮮明。這段時間常遇到新的入口，例如搬遷、轉職或展開新生活。",
+  "keywords": [
+   "搬家",
+   "新生活",
+   "轉職",
+   "新開始",
+   "新造型",
+   "新環境",
+   "機會",
+   "出道",
+   "開幕"
+  ],
+  "tone": "expand"
+ },
+ "t_jupiter_conj_mc": {
+  "title": "木星合天頂",
+  "meaning": "木星與天頂重疊，事業與公開角色擴大。這段時間容易有升遷、獲得肯定，或接下更大責任與舞台。",
+  "keywords": [
+   "升遷",
+   "新職務",
+   "公開",
+   "表揚",
+   "創業",
+   "合作",
+   "得獎",
+   "代表作",
+   "升官"
+  ],
+  "tone": "expand"
+ },
+ "t_saturn_conj_saturn": {
+  "title": "土星回歸",
+  "meaning": "土星回到出生位置，傳統上稱為成年禮。這段時間常重新確認工作、家庭與人生責任，建立接下來數十年的基礎。",
+  "keywords": [
+   "責任",
+   "工作",
+   "家庭",
+   "成家",
+   "買房",
+   "創業",
+   "定下來",
+   "人生方向",
+   "壓力",
+   "承擔"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_sq_saturn": {
+  "title": "土星四分",
+  "meaning": "土星與本命土星相刑，是發展途中現實感的考驗。這段時間常感到期限壓力，被迫在課業、職涯或關係中做出更實際的選擇。",
+  "keywords": [
+   "壓力",
+   "抉擇",
+   "考試",
+   "轉職",
+   "截止",
+   "家人",
+   "現實",
+   "承擔",
+   "改變",
+   "定下來"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_opp_saturn": {
+  "title": "土星對分",
+  "meaning": "土星與本命土星相對，人生責任出現明顯的轉折。這段時間容易在獨立與依賴、自我與角色之間拉扯，需要重新調整腳步。",
+  "keywords": [
+   "轉折",
+   "責任",
+   "獨立",
+   "依賴",
+   "家庭",
+   "工作",
+   "平衡",
+   "調整",
+   "界線",
+   "叛逆"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_conj_sun": {
+  "title": "土星合太陽",
+  "meaning": "土星與本命太陽合相，身分與方向遇上現實考驗。這段時間常需要為自己下的決定負責，從中長出更穩固的自我。",
+  "keywords": [
+   "責任",
+   "決定",
+   "定位",
+   "事業",
+   "轉型",
+   "方向",
+   "承擔",
+   "壓力",
+   "加班",
+   "硬撐"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_conj_moon": {
+  "title": "土星合月亮",
+  "meaning": "土星與本命月亮合相，情緒與家成為焦點。這段時間常要處理家庭責任、居住安排，或為內在安全感重新打地基。",
+  "keywords": [
+   "家人",
+   "家裡",
+   "責任",
+   "房子",
+   "安定",
+   "情緒",
+   "安頓",
+   "搬家",
+   "照顧",
+   "房貸"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_conj_asc": {
+  "title": "土星合上升",
+  "meaning": "土星與上升點合相，人生進入需要扛起自己的新階段。這段時間常改變外型、身分或生活型態，給人更成熟穩重的印象。",
+  "keywords": [
+   "轉變",
+   "成年",
+   "責任",
+   "自律",
+   "新階段",
+   "身分",
+   "形象",
+   "定下來",
+   "擔子",
+   "健身"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_conj_mc": {
+  "title": "土星合天頂",
+  "meaning": "土星與天頂合相，事業與社會角色成為重心。這段時間常接下正式職務、創業或扛起專業聲譽，生涯結構開始定型。",
+  "keywords": [
+   "事業",
+   "升遷",
+   "創業",
+   "頭銜",
+   "責任",
+   "職位",
+   "公開",
+   "代表作",
+   "生涯",
+   "定位"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_sq_sun": {
+  "title": "土星刑太陽",
+  "meaning": "土星與本命太陽相刑，身分方向遇到阻力。這段時間常被迫做出具體選擇，用更嚴肅的方式重新定義自己是誰。",
+  "keywords": [
+   "壓力",
+   "選擇",
+   "方向",
+   "卡關",
+   "現實",
+   "轉職",
+   "承諾",
+   "定位",
+   "加班",
+   "硬撐"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_sq_moon": {
+  "title": "土星刑月亮",
+  "meaning": "土星與本命月亮相刑，情緒和家庭需要務實處理。這段時間常因住處、家人或安全感需求，感到必須做出調整。",
+  "keywords": [
+   "家人",
+   "搬家",
+   "情緒",
+   "壓力",
+   "住處",
+   "責任",
+   "照顧",
+   "整理",
+   "放不下",
+   "安頓"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_sq_asc": {
+  "title": "土星刑上升",
+  "meaning": "土星與上升點相刑，新身分來得有點吃力。這段時間常被要求拿出成熟表現，外在形象必須經過現實考驗。",
+  "keywords": [
+   "壓力",
+   "形象",
+   "身分",
+   "轉變",
+   "考驗",
+   "新環境",
+   "自律",
+   "被看見",
+   "適應",
+   "責任"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_sq_mc": {
+  "title": "土星刑天頂",
+  "meaning": "土星與天頂相刑，事業與人生方向出現關卡。這段時間常在職場被施壓，或必須調整生涯規劃以符合現實。",
+  "keywords": [
+   "工作",
+   "升遷",
+   "卡關",
+   "生涯",
+   "壓力",
+   "轉職",
+   "主管",
+   "考核",
+   "重整",
+   "極限"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_opp_sun": {
+  "title": "土星沖太陽",
+  "meaning": "土星與本命太陽相對，身分與外在要求互相拉扯。這段時間容易在親密關係、合作關係或公眾眼光中，重新確認自己是誰。",
+  "keywords": [
+   "關係",
+   "合作",
+   "磨合",
+   "對方",
+   "壓力",
+   "平衡",
+   "公開",
+   "伴侶",
+   "妥協",
+   "界線"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_opp_moon": {
+  "title": "土星沖月亮",
+  "meaning": "土星與本命月亮相對，內在需求與外界責任兩端拉扯。這段時間常在照顧他人與照顧自己之間，尋找新的平衡。",
+  "keywords": [
+   "家人",
+   "照顧",
+   "責任",
+   "情緒",
+   "平衡",
+   "工作",
+   "家庭",
+   "壓力",
+   "付出",
+   "界線"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_opp_asc": {
+  "title": "土星沖上升",
+  "meaning": "土星對分上升點，自我與他人之間需要重新協商。這段時間常因伴侶、合作夥伴或公開對手，被迫調整人生方向。",
+  "keywords": [
+   "合夥",
+   "伴侶",
+   "關係",
+   "協調",
+   "壓力",
+   "簽約",
+   "對手",
+   "改變",
+   "責任",
+   "界線"
+  ],
+  "tone": "structure"
+ },
+ "t_saturn_opp_mc": {
+  "title": "土星沖天頂",
+  "meaning": "土星對分天頂，事業與家庭、私生活與公眾角色互相拉扯。這段時間常要兼顧兩端，重新安排自己的時間與精力。",
+  "keywords": [
+   "家庭",
+   "工作",
+   "兩難",
+   "兼顧",
+   "事業",
+   "搬家",
+   "責任",
+   "時間",
+   "重整",
+   "平衡"
+  ],
+  "tone": "structure"
+ },
+ "t_uranus_sq_uranus": {
+  "title": "天王星四分",
+  "meaning": "天王星與本命天王星相刑，獨立與安穩之間出現張力。這段時間常突然想離開原有軌道，換科系、換工作或改變生活型態。",
+  "keywords": [
+   "離開",
+   "改變",
+   "自由",
+   "轉職",
+   "休學",
+   "搬家",
+   "獨立",
+   "反叛",
+   "轉系",
+   "出走"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_opp_uranus": {
+  "title": "天王星對分",
+  "meaning": "天王星與本命天王星相對，人生路線需要重新畫線。這段時間常突然換工作、搬家或結束舊循環，追求更真實的自己。",
+  "keywords": [
+   "轉變",
+   "換工作",
+   "搬家",
+   "結束",
+   "自由",
+   "新方向",
+   "改革",
+   "獨立",
+   "重來",
+   "中年"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_conj_sun": {
+  "title": "天王星合太陽",
+  "meaning": "天王星與本命太陽合相，身分與方向突然被更新。這段時間常做出以前不敢做的決定，換跑道、公開新身分或大幅改變外型。",
+  "keywords": [
+   "改變",
+   "新身分",
+   "換跑道",
+   "解放",
+   "突破",
+   "造型",
+   "公開",
+   "自由",
+   "決定",
+   "重新開始"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_conj_moon": {
+  "title": "天王星合月亮",
+  "meaning": "天王星與本命月亮合相，情緒與家庭生活不按牌理出牌。這段時間常突然搬家、改變家人互動，或需要更多個人空間。",
+  "keywords": [
+   "搬家",
+   "家人",
+   "空間",
+   "自由",
+   "情緒",
+   "改變",
+   "獨立",
+   "大掃除",
+   "想走",
+   "裝修"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_conj_asc": {
+  "title": "天王星合上升",
+  "meaning": "天王星與上升點合相，人生展開無法預測的新章節。這段時間常改變外型、身分或居住地，給人煥然一新的感覺。",
+  "keywords": [
+   "新形象",
+   "搬家",
+   "轉變",
+   "新生活",
+   "造型",
+   "重來",
+   "自由",
+   "冒險",
+   "出走",
+   "更新"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_conj_mc": {
+  "title": "天王星合天頂",
+  "meaning": "天王星與天頂合相，事業與公開角色發生斷裂式更新。這段時間常離開舊職位、創業，或突然轉入完全不同的領域。",
+  "keywords": [
+   "轉職",
+   "創業",
+   "辭職",
+   "事業",
+   "新領域",
+   "改革",
+   "突破",
+   "公開",
+   "跳槽",
+   "自立門戶"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_sq_sun": {
+  "title": "天王星刑太陽",
+  "meaning": "天王星與本命太陽相刑，自我與自由之間產生張力。這段時間常被逼著脫離舊身分，做出帶有風險的選擇。",
+  "keywords": [
+   "卡住",
+   "改變",
+   "抉擇",
+   "自由",
+   "衝突",
+   "反叛",
+   "冒險",
+   "突破",
+   "不甘心",
+   "出走"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_sq_moon": {
+  "title": "天王星刑月亮",
+  "meaning": "天王星與本命月亮相刑，情緒和安全感被擾動。這段時間常在家庭、住處或內在感受上被迫改變，感覺坐立不安。",
+  "keywords": [
+   "不安",
+   "搬家",
+   "家人",
+   "情緒",
+   "改變",
+   "空間",
+   "出走",
+   "適應",
+   "煩躁",
+   "獨立"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_sq_asc": {
+  "title": "天王星刑上升",
+  "meaning": "天王星與上升點相刑，新形象與舊生活互相碰撞。這段時間常被迫改變外在身分，或因為環境突變而重新定義自己。",
+  "keywords": [
+   "轉變",
+   "衝突",
+   "身分",
+   "新環境",
+   "適應",
+   "突破",
+   "形象",
+   "改變",
+   "被迫",
+   "重來"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_sq_mc": {
+  "title": "天王星刑天頂",
+  "meaning": "天王星與天頂相刑，事業方向被外力打斷。這段時間常遇到組織異動、計畫改變或臨時轉彎，必須快速找出新出路。",
+  "keywords": [
+   "轉職",
+   "公司異動",
+   "計畫改變",
+   "跳槽",
+   "轉彎",
+   "卡關",
+   "突破",
+   "自立",
+   "創業",
+   "彈性"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_opp_sun": {
+  "title": "天王星沖太陽",
+  "meaning": "天王星對分本命太陽，自我與他人間的平衡被打破。這段時間常在關係中感受到對方需要空間，或因為外界反應而改變方向。",
+  "keywords": [
+   "關係",
+   "對方",
+   "空間",
+   "自由",
+   "衝突",
+   "合夥",
+   "公開",
+   "改變",
+   "拉鋸",
+   "獨立"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_opp_moon": {
+  "title": "天王星沖月亮",
+  "meaning": "天王星對分本命月亮，內在需求與外界變動互相拉鋸。這段時間常因家人、居住或親密關係的突變，重新尋找安全感。",
+  "keywords": [
+   "家人",
+   "搬家",
+   "關係",
+   "情緒",
+   "不安",
+   "改變",
+   "距離",
+   "空間",
+   "安全感",
+   "重整"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_opp_asc": {
+  "title": "天王星沖上升",
+  "meaning": "天王星對分上升點，自我與重要他人互相牽動。這段時間常透過伴侶、合夥人或公開互動，看到自己需要解放的部分。",
+  "keywords": [
+   "伴侶",
+   "合夥",
+   "關係",
+   "衝突",
+   "自由",
+   "改變",
+   "公開",
+   "和解",
+   "獨立",
+   "磨合"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_uranus_opp_mc": {
+  "title": "天王星沖天頂",
+  "meaning": "天王星對分天頂，事業與家庭之間出現突然的震動。這段時間常在搬家、換工作或改變居住地中，重畫公私界線。",
+  "keywords": [
+   "搬家",
+   "換工作",
+   "家庭",
+   "事業",
+   "平衡",
+   "突變",
+   "遠距",
+   "通勤",
+   "重整",
+   "界線"
+  ],
+  "tone": "breakthrough"
+ },
+ "t_neptune_sq_neptune": {
+  "title": "海王星四分",
+  "meaning": "海王星與本命海王星相刑，理想與現實開始對不上。這段時間常放棄某些幻想，也常被藝術、靈性或遠方吸引。",
+  "keywords": [
+   "理想",
+   "幻滅",
+   "迷惘",
+   "藝術",
+   "旅行",
+   "靈性",
+   "夢想",
+   "放下",
+   "找回自己",
+   "遠方"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_conj_sun": {
+  "title": "海王星合太陽",
+  "meaning": "海王星與本命太陽合相，身分方向變得朦朧而開放。這段時間常對生命產生新的想像，也可能因為迷惘而暫停腳步。",
+  "keywords": [
+   "迷惘",
+   "夢想",
+   "靈感",
+   "尋找",
+   "方向",
+   "創作",
+   "放空",
+   "旅行",
+   "信仰",
+   "不確定"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_conj_moon": {
+  "title": "海王星合月亮",
+  "meaning": "海王星與本命月亮合相，情緒與家的界線模糊。這段時間常特別敏感，容易投入照顧、藝術或需要想像力的生活場景。",
+  "keywords": [
+   "敏感",
+   "做夢",
+   "家人",
+   "搬家",
+   "想念",
+   "創作",
+   "靈感",
+   "眼淚",
+   "療癒",
+   "模糊"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_conj_asc": {
+  "title": "海王星合上升",
+  "meaning": "海王星與上升點合相，自我形象變得很容易受環境感染。這段時間常給人神祕或溫柔的印象，也可能對人生方向感到茫然。",
+  "keywords": [
+   "形象",
+   "迷惘",
+   "新開始",
+   "遇見",
+   "改變",
+   "低調",
+   "浪漫",
+   "神祕",
+   "直覺",
+   "重來"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_conj_mc": {
+  "title": "海王星合天頂",
+  "meaning": "海王星與天頂合相，事業與公開角色變得模糊。這段時間常被創作、公益或理想召喚，也可能暫時不清楚職業方向。",
+  "keywords": [
+   "事業",
+   "迷惘",
+   "創作",
+   "公益",
+   "理想",
+   "轉職",
+   "休息",
+   "靈感",
+   "低調",
+   "重新定義"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_sq_sun": {
+  "title": "海王星刑太陽",
+  "meaning": "海王星與本命太陽相刑，理想與現實互相拉扯。這段時間常感到方向不清，也容易為了夢想犧牲某些確定性。",
+  "keywords": [
+   "迷惘",
+   "理想",
+   "現實",
+   "選擇",
+   "犧牲",
+   "拖延",
+   "方向",
+   "逃避",
+   "創作",
+   "幻滅"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_sq_moon": {
+  "title": "海王星刑月亮",
+  "meaning": "海王星與本命月亮相刑，情緒界線容易被衝破。這段時間常經歷想念、不安或照顧別人的疲憊，需要保留獨處空間。",
+  "keywords": [
+   "情緒",
+   "想念",
+   "疲憊",
+   "照顧",
+   "空間",
+   "睡覺",
+   "逃避",
+   "敏感",
+   "放下",
+   "整理"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_sq_asc": {
+  "title": "海王星刑上升",
+  "meaning": "海王星與上升點相刑，自我形象與外界期待對不上。這段時間常感到被誤解，或為了維持形象而消耗許多力氣。",
+  "keywords": [
+   "誤會",
+   "形象",
+   "低調",
+   "退縮",
+   "關係",
+   "消耗",
+   "改變",
+   "看清",
+   "心累",
+   "界線"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_sq_mc": {
+  "title": "海王星刑天頂",
+  "meaning": "海王星與天頂相刑，事業期待與現實出現落差。這段時間常對工作感到失望或茫然，需要找到理想與生活的接點。",
+  "keywords": [
+   "工作",
+   "失望",
+   "迷惘",
+   "理想",
+   "轉職",
+   "休息",
+   "方向",
+   "現實",
+   "創作",
+   "重新思考"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_opp_sun": {
+  "title": "海王星沖太陽",
+  "meaning": "海王星對分本命太陽，自我與他人的期待互相投射。這段時間常在關係裡看見自己理想化的部分，也需要分辨哪些是真實。",
+  "keywords": [
+   "關係",
+   "心動",
+   "幻想",
+   "看清",
+   "期待",
+   "失望",
+   "對方",
+   "界線",
+   "真實",
+   "和解"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_opp_moon": {
+  "title": "海王星沖月亮",
+  "meaning": "海王星對分本命月亮，內在感受與外界氛圍互相纏繞。這段時間常被他人的情緒牽動，需要學會區分自己的需要。",
+  "keywords": [
+   "情緒",
+   "牽動",
+   "敏感",
+   "家人",
+   "照顧",
+   "界線",
+   "放下",
+   "需要",
+   "關係",
+   "喘息"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_opp_asc": {
+  "title": "海王星沖上升",
+  "meaning": "海王星對分上升點，重要他人常映照出自己看不清的部分。這段時間容易在關係裡經歷期待與失落，也學習溫柔看待自己。",
+  "keywords": [
+   "關係",
+   "期待",
+   "失落",
+   "看見",
+   "伴侶",
+   "合夥",
+   "誤會",
+   "理解",
+   "界線",
+   "療癒"
+  ],
+  "tone": "dream"
+ },
+ "t_neptune_opp_mc": {
+  "title": "海王星沖天頂",
+  "meaning": "海王星對分天頂，家庭與事業之間有許多無法明說的感受。這段時間常在工作與照顧家人之間，重新調整界線和節奏。",
+  "keywords": [
+   "家庭",
+   "工作",
+   "照顧",
+   "兩難",
+   "模糊",
+   "壓力",
+   "休息",
+   "搬家",
+   "調整",
+   "界線"
+  ],
+  "tone": "dream"
+ },
+ "t_pluto_sq_pluto": {
+  "title": "冥王星四分",
+  "meaning": "冥王星與本命冥王星相刑，是深層身分的考驗。這段時間常經歷掌握權力、被迫放手或徹底轉變的過程。",
+  "keywords": [
+   "轉變",
+   "結束",
+   "放手",
+   "重生",
+   "權力",
+   "控制",
+   "真相",
+   "重新開始",
+   "深刻",
+   "長大"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_conj_sun": {
+  "title": "冥王星合太陽",
+  "meaning": "冥王星與本命太陽合相，身分進入深度轉化。這段時間常放棄舊目標、更換人生跑道，並感受到內在力量大幅重整。",
+  "keywords": [
+   "重生",
+   "轉變",
+   "結束",
+   "新方向",
+   "脫胎換骨",
+   "真相",
+   "放下",
+   "力量",
+   "告別",
+   "開始"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_conj_moon": {
+  "title": "冥王星合月亮",
+  "meaning": "冥王星與本命月亮合相，情緒與家掀起深層翻攪。這段時間常處理家族事務、居住遷移，或面對內在的依附與恐懼。",
+  "keywords": [
+   "家人",
+   "搬家",
+   "情緒",
+   "依附",
+   "恐懼",
+   "整理",
+   "祕密",
+   "結束",
+   "重生",
+   "老屋"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_conj_asc": {
+  "title": "冥王星合上升",
+  "meaning": "冥王星與上升點合相，人生章節進入徹底重寫。這段時間常經歷身分轉轉變、遷居或面貌改變，告別過去某個自己。",
+  "keywords": [
+   "重生",
+   "轉變",
+   "搬家",
+   "新身分",
+   "告別",
+   "重新開始",
+   "結束",
+   "刺青",
+   "谷底",
+   "翻身"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_conj_mc": {
+  "title": "冥王星合天頂",
+  "meaning": "冥王星與天頂合相，事業生涯出現深度重組。這段時間常離開原有產業、接下權力位置，或經歷職場上的階級變動。",
+  "keywords": [
+   "事業",
+   "轉職",
+   "權力",
+   "重整",
+   "結束",
+   "創業",
+   "高層",
+   "翻盤",
+   "新領域",
+   "重建"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_sq_sun": {
+  "title": "冥王星刑太陽",
+  "meaning": "冥王星與本命太陽相刑，自我意志與環境力量互相衝撞。這段時間常被迫放棄某些主控權，在極限中長出新的韌性。",
+  "keywords": [
+   "衝突",
+   "控制",
+   "放手",
+   "重生",
+   "轉變",
+   "固執",
+   "極限",
+   "認輸",
+   "撐住",
+   "真相"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_sq_moon": {
+  "title": "冥王星刑月亮",
+  "meaning": "冥王星與本命月亮相刑，情緒與家庭關係出現深層壓力。這段時間常在家人或居住議題上，被迫面對一直避開的感受。",
+  "keywords": [
+   "家人",
+   "情緒",
+   "壓力",
+   "逃避",
+   "面對",
+   "整理",
+   "搬家",
+   "心結",
+   "安全感",
+   "改變"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_sq_asc": {
+  "title": "冥王星刑上升",
+  "meaning": "冥王星與上升點相刑，自我形象與外界權力互動激烈。這段時間常因為關係、伴侶或合作而被迫重新定義自己。",
+  "keywords": [
+   "關係",
+   "控制",
+   "權力",
+   "轉變",
+   "界線",
+   "伴侶",
+   "合夥",
+   "重新定義",
+   "拒絕",
+   "撕破臉"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_sq_mc": {
+  "title": "冥王星刑天頂",
+  "meaning": "冥王星與天頂相刑，事業與人生方向遇上結構性的考驗。這段時間常在職場遇到權力議題，或必須放棄原本的生涯藍圖。",
+  "keywords": [
+   "事業",
+   "權力",
+   "轉變",
+   "離職",
+   "主管",
+   "藍圖",
+   "放棄",
+   "重建",
+   "生涯",
+   "極限"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_opp_sun": {
+  "title": "冥王星沖太陽",
+  "meaning": "冥王星對分本命太陽，自我與重要他人展開深刻角力。這段時間常在關係中發現自己的陰影，也學習把力量拿回來。",
+  "keywords": [
+   "關係",
+   "對方",
+   "陰影",
+   "控制",
+   "角力",
+   "界線",
+   "伴侶",
+   "真相",
+   "和解",
+   "力量"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_opp_moon": {
+  "title": "冥王星沖月亮",
+  "meaning": "冥王星對分本命月亮，內在安全感與外界變動激烈互撞。這段時間常因家人、住處或親密關係的變化，情緒經歷大洗牌。",
+  "keywords": [
+   "家人",
+   "搬家",
+   "情緒",
+   "關係",
+   "重生",
+   "衝突",
+   "整理",
+   "放手",
+   "安全感",
+   "洗牌"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_opp_asc": {
+  "title": "冥王星沖上升",
+  "meaning": "冥王星對分上升點，他人常逼著你看見自己的陰影。這段時間在伴侶、合夥或公開關係裡，經歷深刻轉變與界線重整。",
+  "keywords": [
+   "伴侶",
+   "合夥",
+   "關係",
+   "陰影",
+   "界線",
+   "衝突",
+   "轉變",
+   "對方",
+   "面對",
+   "重生"
+  ],
+  "tone": "transform"
+ },
+ "t_pluto_opp_mc": {
+  "title": "冥王星沖天頂",
+  "meaning": "冥王星對分天頂，事業與家庭之間有深層權力拉扯。這段時間常為了家人、居住或生涯核心，做出徹底的重新安排。",
+  "keywords": [
+   "家庭",
+   "事業",
+   "搬家",
+   "生涯",
+   "權力",
+   "重整",
+   "抉擇",
+   "家人",
+   "轉變",
+   "重建"
+  ],
+  "tone": "transform"
+ },
+ "p_sun_sign": {
+  "title": "推運太陽進入{sign}",
+  "meaning": "推運太陽換星座，人生關注的主題跟著轉變。這段時間常用新的方式表達自己，朝向與{sign}相關的生活領域前進。",
+  "keywords": [
+   "轉變",
+   "新階段",
+   "新方向",
+   "身分",
+   "開始",
+   "重新出發",
+   "調整",
+   "新目標",
+   "新計畫",
+   "新生活"
+  ],
+  "tone": "transform"
+ },
+ "p_moon_asc": {
+  "title": "推運月亮合上升",
+  "meaning": "推運月亮越過上升點，情緒與生活節奏進入新週期。這段時間常回顧過去，並準備好把某些感受化為新的開始。",
+  "keywords": [
+   "回顧",
+   "整理",
+   "情緒",
+   "新開始",
+   "重新出發",
+   "搬家",
+   "放下",
+   "轉變",
+   "出發",
+   "心情"
+  ],
+  "tone": "review"
+ },
+ "p_moon_ic": {
+  "title": "推運月亮合天底",
+  "meaning": "推運月亮越過天底，內在與家庭成為重心。這段時間常搬遷、處理家事，或把注意力轉向根與安全感。",
+  "keywords": [
+   "老家",
+   "搬家",
+   "家人",
+   "整理",
+   "回顧",
+   "情緒",
+   "根源",
+   "安頓",
+   "修復",
+   "鄉愁"
+  ],
+  "tone": "review"
+ },
+ "p_moon_dsc": {
+  "title": "推運月亮合下降",
+  "meaning": "推運月亮越過下降點，關係成為此時的鏡子。這段時間常重新評估重要他人，也在互動中整理自己的需要。",
+  "keywords": [
+   "關係",
+   "對方",
+   "伴侶",
+   "整理",
+   "回顧",
+   "需要",
+   "合作",
+   "溝通",
+   "和好",
+   "看清"
+  ],
+  "tone": "review"
+ },
+ "p_moon_mc": {
+  "title": "推運月亮合天頂",
+  "meaning": "推運月亮越過天頂，公開角色與事業感受浮上檯面。這段時間常回顧工作軌跡，或對社會身分有新的體會。",
+  "keywords": [
+   "事業",
+   "工作",
+   "回顧",
+   "公開",
+   "身分",
+   "轉變",
+   "生涯",
+   "責任",
+   "里程碑",
+   "體會"
+  ],
+  "tone": "review"
+ },
+ "p_moon_return": {
+  "title": "推運月亮回歸",
+  "meaning": "推運月亮回到本命月亮位置，情緒週期畫出完整圓圈。這段時間常重新感受早年熟悉的需要，適合整理家庭與內在課題。",
+  "keywords": [
+   "回顧",
+   "家人",
+   "情緒",
+   "需要",
+   "安全感",
+   "整理",
+   "舊地重遊",
+   "放鬆",
+   "和解",
+   "循環"
+  ],
+  "tone": "review"
+ },
+ "p_newmoon": {
+  "title": "推運新月",
+  "meaning": "推運太陽與月亮合相，展開長達約三十年的新週期。這段時間常在身分與情感上重新設定方向，是人生章節的起點。",
+  "keywords": [
+   "新開始",
+   "新週期",
+   "起點",
+   "設定",
+   "方向",
+   "重生",
+   "未來",
+   "計畫",
+   "轉折",
+   "誕生"
+  ],
+  "tone": "transform"
+ }
+};
+
 const fmtDeg = lon => { const d = lon % 30, dd = Math.floor(d), mm = Math.floor((d - dd) * 60); return `${dd}°${pad2(mm)}′`; };
 const pName = k => (PLANETS.find(p => p[0] === k) || [])[1];
 
@@ -3875,6 +5518,7 @@ function chartFacts(ch) {
   return rows;
 }
 
+/* ASTRO:END */
 /* ---------- 星盤圖 ---------- */
 function drawWheel(g, cx0, cy0, R, ch, o = {}) {
   const col = o.col || { ring: 'rgba(201,216,234,.55)', dim: 'rgba(201,216,234,.22)', txt: '#C9D8EA', sub: '#8FA3BA', warm: 'rgba(224,170,140,.55)', cool: 'rgba(150,190,240,.55)', planet: '#EDE8E0' };
@@ -3942,7 +5586,7 @@ async function makeChart() {
   try { await loadAstro(); } catch (e) { $('#astroErr').textContent = e.message; btn.disabled = false; btn.textContent = '排盤，說明我的命格'; return; }
   let ch; try { ch = computeChart(b); } catch (e) { console.error(e); $('#astroErr').textContent = '排盤失敗，請檢查出生資料。'; btn.disabled = false; btn.textContent = '排盤，說明我的命格'; return; }
   ch.place = b.place; ch.input = b;
-  ALTASTRO = { chart: ch, sketch: chartSketch(ch), ai: null };
+  ALTASTRO = { chart: ch, sketch: chartSketch(ch), ai: null, tl: null };
   renderChart();
   btn.disabled = false; btn.textContent = '重新排盤';
   setScreen(drawChartScreen);
@@ -3956,6 +5600,13 @@ function renderChart() {
   const u = new Date(ch.utc);
   $('#chartFacts').innerHTML = chartFacts(ch).map(r => `<li>${esc(r)}</li>`).join('') + `<li>出生：${b.y}/${pad2(b.mo)}/${pad2(b.d)} ${ch.timeKnown ? `${pad2(b.h)}:${pad2(b.mi)}` : '時間不詳，以中午計'}　${esc(ch.place)}（${offText(ch.off)}）</li><li>世界時：${u.getUTCFullYear()}/${pad2(u.getUTCMonth() + 1)}/${pad2(u.getUTCDate())} ${pad2(u.getUTCHours())}:${pad2(u.getUTCMinutes())}　宮位制：${ch.system === 'Placidus' ? 'Placidus' : 'Porphyry（高緯度 Placidus 無解）'}</li>`;
   $('#chartBox').hidden = false;
+  $('#tlBox').hidden = false;
+  if (ALTASTRO.tl) {
+    renderTimeline();
+  } else {
+    $('#tlOut').innerHTML = '';
+    $('#bTimeline').textContent = '排出我的人生時間軸';
+  }
   renderChartAI(); updateAltAvail();
 }
 function renderChartAI() {
@@ -3983,7 +5634,14 @@ async function runChartAI() {
   catch (e) { if (!e || e.code !== 'cancelled') $('#astroErr').textContent = altError(e && e.code); }
   btn.disabled = false; btn.textContent = '請 GMI 模型深入解讀命格';
 }
-function clearChart() { ALTASTRO = null; $('#chartBox').hidden = true; $('#bChart').textContent = '排盤，說明我的命格'; setScreen(ALT ? () => drawForkPoster() : drawIdle); }
+function clearChart() {
+  ALTASTRO = null;
+  $('#chartBox').hidden = true;
+  $('#tlBox').hidden = true;
+  $('#tlOut').innerHTML = '';
+  $('#bChart').textContent = '排盤，說明我的命格';
+  setScreen(ALT ? () => drawForkPoster() : drawIdle);
+}
 function drawerView() {
   const open = [altModal, mosModal, typeof aiModal !== 'undefined' ? aiModal : null].find(m => m && !m.hidden), box = open && open.querySelector('.box'), dw = box ? box.getBoundingClientRect().width : 0, frac = (innerWidth - dw) / innerWidth;
   if (frac > .92 || frac < .5) return viewingView(viewDist(.74));
@@ -4032,6 +5690,11 @@ function altPrompt(Lx, fork, what, astro) {
   const later = pickEven(Lx.textPosts.filter(p => p.ts > bts + 2 * YEAR && !after.includes(p)), 8);
   const line = p => `${fmtYM(p.ts)}　${truncate(p.flat, 70)}`;
   const leads = Lx.lead.map(o => o.s.w).slice(0, 4);
+  const tlBlock = astro && astro.tl ? [
+    '【同一片天空：分岔點之後的重大時間窗】',
+    ...astro.tl.windows.filter(w => w.major && w.exact[0] > bts && w.start < new Date(lastY + 1, 0, 1).getTime()).slice(0, 10)
+      .map(w => `${fmtYM(w.start)}～${fmtYM(w.end)}　${tlTitle(w)}：${tlMeaning(w)}`)
+  ] : [];
   return [
     '你是「人生電影院」的編劇。請替一位觀眾寫他的「第二人生」：如果他在某個分岔點做了另一個選擇，之後的人生可能是什麼樣子。這是明確標示為虛構的娛樂內容，不是預測，也不是建議。',
     '', `觀眾稱呼：${Lx.name}`, `他在 Facebook 上寫了 ${Math.floor(Lx.k0 / 12)} 到 ${lastY} 年的貼文。以下是他的真實原文，只用來理解他的語氣和生活，不要照抄。`,
@@ -4040,7 +5703,7 @@ function altPrompt(Lx, fork, what, astro) {
     '', '【真實人生後來的樣子，第二人生要和它不同】', ...after.map(line), ...later.map(line),
     '', `在他每個時期都出現的詞：${leads.join('、') || '（沒有）'}`, `他真實人生的分幕：${Lx.acts.map(a => `${a.title}（${a.label}）`).join('、')}`, `他真實的最後一句：「${Lx.lastLine ? Lx.lastLine.flat : ''}」`,
     '', `他想看的另一個選擇：「如果當時${what}」`,
-    ...(astro ? ['【他的星盤，天文星曆精確計算，西洋占星、回歸黃道、Placidus 宮位制】', ...chartFacts(astro.chart), `命格速寫：${astro.sketch.head}${astro.sketch.choice}`, ...(astro.ai ? [`命格解讀：${astro.ai.title}。${astro.ai.summary}${astro.ai.choice}`] : []), '請把這張盤在占星傳統上的性格意象當成角色設定，影響他在這條路上怎麼做決定、在哪裡卡住；不要寫成命運、預言或保證。'] : ['他沒有提供星盤。']),
+    ...(astro ? ['【他的星盤，天文星曆精確計算，西洋占星、回歸黃道、Placidus 宮位制】', ...chartFacts(astro.chart), `命格速寫：${astro.sketch.head}${astro.sketch.choice}`, ...(astro.ai ? [`命格解讀：${astro.ai.title}。${astro.ai.summary}${astro.ai.choice}`] : []), '請把這張盤在占星傳統上的性格意象當成角色設定，影響他在這條路上怎麼做決定、在哪裡卡住；不要寫成命運、預言或保證。', ...tlBlock] : ['他沒有提供星盤。']),
     '', '寫作規則：',
     `1. 從分岔點寫到 ${lastY} 年，8 到 12 個場景，時間由早到晚，年份不可早於 ${Math.floor(fork.k / 12)}。`,
     '2. 每個場景是一則「如果那樣過，他可能會寫的貼文」：第一人稱，模仿上面原文的語氣，短、克制、具體，12 到 40 個字，不用驚嘆號，不寫感想式結論。',
@@ -4049,22 +5712,27 @@ function altPrompt(Lx, fork, what, astro) {
     '5. 不要出現真實人物的全名，也不要出現真實公司或品牌名稱；用「室友」「媽媽」「一間遊戲公司」這種說法。',
     '6. 繁體中文，台灣用語。',
     '7. 最後一則貼文要和他真實的最後一句形成對照：句型相近，換掉一兩個詞。',
+    ...(astro && astro.tl ? ['8. 這條人生和真實人生共用同一片天空：把轉折安排在上面這些時間窗附近，落在時間窗裡的場景，在 astro 欄位用二十字內寫出天象和它的意思，其他場景的 astro 留空字串。'] : []),
     '', '只回傳一個 JSON 物件，不要其他文字，格式如下：',
-    '{"title":"四到八個字的片名","logline":"一句話，二十五字以內","keeps":["兩條人生都有的詞"],"gone":["只在真實人生出現的詞"],"added":["只在第二人生出現的詞"],"scenes":[{"year":2014,"month":5,"text":"貼文內容"}],"astro":"若有星盤，一句話說明它怎麼影響這條路；沒有就給空字串"' + (astro && !astro.ai ? ',"reading":{"title":"六到十個字的命格名稱，像電影角色設定","summary":"三句，依占星傳統說明這張盤的核心性格組合","choice":"兩句，站在人生分岔點時這張盤的人傾向怎麼選"}' : '') + '}'
+    '{"title":"四到八個字的片名","logline":"一句話，二十五字以內","keeps":["兩條人生都有的詞"],"gone":["只在真實人生出現的詞"],"added":["只在第二人生出現的詞"],"scenes":[{"year":2014,"month":5,"text":"貼文內容","astro":""}],"astro":"若有星盤，一句話說明它怎麼影響這條路；沒有就給空字串"' + (astro && !astro.ai ? ',"reading":{"title":"六到十個字的命格名稱，像電影角色設定","summary":"三句，依占星傳統說明這張盤的核心性格組合","choice":"兩句，站在人生分岔點時這張盤的人傾向怎麼選"}' : '') + '}'
   ].join('\n');
 }
 function cleanBranch(o, fork, what, astro) {
   if (!o || typeof o !== 'object' || !Array.isArray(o.scenes)) throw { code: 'invalid_json' };
   const y0 = Math.floor(fork.k / 12), y1 = Math.floor(L.k1 / 12) + 1;
-  const scenes = o.scenes.map(s => ({ y: Math.round(+s.year), m: clamp(Math.round(+s.month) || 6, 1, 12), text: String(s.text || '').replace(/\s+/g, ' ').trim().slice(0, 90) }))
-    .filter(s => s.text && s.y >= y0 && s.y <= y1).sort((a, b) => (a.y * 12 + a.m) - (b.y * 12 + b.m)).slice(0, 12);
+  const scenes = o.scenes.map(s => ({
+    y: Math.round(+s.year),
+    m: clamp(Math.round(+s.month) || 6, 1, 12),
+    text: String(s.text || '').replace(/\s+/g, ' ').trim().slice(0, 90),
+    astro: truncate(String(s.astro || '').replace(/\s+/g, ' ').trim(), 30)
+  })).filter(s => s.text && s.y >= y0 && s.y <= y1)
+    .sort((a, b) => (a.y * 12 + a.m) - (b.y * 12 + b.m)).slice(0, 12);
   if (scenes.length < 3) throw { code: 'invalid_json' };
   scenes.forEach(s => { s.ts = Math.max(new Date(s.y, s.m - 1, 15, 12).getTime(), fork.ts + 30 * DAY); });
   const arr = v => Array.isArray(v) ? v.map(x => String(x).trim()).filter(Boolean).map(x => truncate(x, 10)).slice(0, 6) : [];
   if (astro && !astro.ai && o.reading) { try { astro.ai = cleanReading(o.reading); } catch {} }
   return { title: truncate(String(o.title || '第二人生').trim(), 12), logline: truncate(String(o.logline || '').trim(), 40), keeps: arr(o.keeps), gone: arr(o.gone), added: arr(o.added || o.new), scenes, astro: truncate(String(o.astro || '').trim(), 90), what, astroIn: astro, demo: false };
 }
-
 /* ---------- 抽屜介面 ---------- */
 const altModal = $('#altModal');
 function openAlt(k) {
@@ -4104,6 +5772,380 @@ $('#bCity').innerHTML = CITIES.map((c, i) => `<option value="${i}">${c[0]}</opti
 $('#bOff').innerHTML = [...Array.from({ length: 27 }, (_, i) => (i - 12) * 60), 330, 345, 570, 630].sort((a, b) => a - b).map(m => `<option value="${m}"${m === 480 ? ' selected' : ''}>${offText(m)}</option>`).join('');
 $('#bCity').addEventListener('change', () => { $('#bCustom').hidden = $('#bCity').value !== 'x'; });
 $('#bNoTime').addEventListener('change', () => { $('#bTime').disabled = $('#bNoTime').checked; });
+function tlTitle(w) {
+  const r = TL_RULES[w.rule] || {};
+  return String(r.title || w.rule || '').replace(/\{sign\}/g, SIGNS[w.sign] || '');
+}
+
+function tlMeaning(w) {
+  const r = TL_RULES[w.rule] || {};
+  return String(r.meaning || '').replace(/\{sign\}/g, SIGNS[w.sign] || '');
+}
+
+function tlTone(w) {
+  return (TL_RULES[w.rule] || {}).tone || 'review';
+}
+
+function tlDate(w) {
+  const a = new Date(w.start), b = new Date(w.end);
+  return w.kind === 'progression' ||
+    (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth())
+    ? fmtYM(w.start)
+    : `${fmtYM(w.start)}～${fmtYM(w.end)}`;
+}
+
+function tlItem(w, showPosts) {
+  const posts = showPosts && w.posts ? w.posts : [];
+  const postHTML = showPosts ? `<div class="tl-posts">${
+    w.before ? '<p class="tl-post">這時候你還沒開始寫 Facebook。</p>' : posts.length
+      ? posts.map(p => `<p class="tl-post"><b class="${p.hit ? 'hit' : ''}">${esc(fmtYM(p.ts))}</b>　${esc(p.text)}</p>`).join('')
+      : '<p class="tl-post">這段時間沒有找到相關的貼文</p>'
+  }</div>` : '';
+
+  return `<article class="tl-item" data-tone="${esc(tlTone(w))}">
+    <div class="tl-date${w.hit ? ' hit' : ''}">${esc(tlDate(w))}　${esc(w.age)} 歲</div>
+    <div class="tl-title">${esc(tlTitle(w))}${w.major ? '<span class="major">重大</span>' : ''}</div>
+    <div class="tl-meaning">${esc(tlMeaning(w))}</div>
+    ${postHTML}
+  </article>`;
+}
+function renderTimeline() {
+  const A = ALTASTRO, out = $('#tlOut');
+  if (!A || !A.tl || !out) return;
+
+  const t = A.tl;
+  const ws = t.windows || [];
+  const r = t.range || {};
+  const fromYear = new Date(r.from).getFullYear();
+  const toYear = new Date(r.to).getFullYear();
+  const majorN = ws.filter(w => w.major).length;
+  const beforeN = ws.filter(w => w.before).length;
+  const summary = t.summary;
+
+  const past = summary
+    ? `已經走過的 ${summary.past} 個時間窗裡，${summary.hits} 個找得到內容對得上的貼文；拿同樣長度的隨機時間段來比，平均是 ${Math.round((summary.baseline || 0) * summary.past)} 個。`
+    : '放入你自己的 Facebook 匯出檔之後，每一段時間旁邊都會出現你當時寫的貼文。';
+
+  const summaryHTML = summary
+    ? `<p>${esc(past)}</p>
+       <p>兩個數字差得越多，越值得多看一眼；差不多的話，就當成回顧人生的一個角度。</p>`
+    : `<p>${esc(past)}</p>`;
+
+  const beforeHTML = beforeN
+    ? `<p>另外 ${esc(beforeN)} 個時間窗發生在你開始寫 Facebook 之前，按「顯示全部」可以看到。</p>`
+    : '';
+
+  out.innerHTML = `<div class="tl-summary">
+    <p>從 ${esc(fromYear)} 年到 ${esc(toYear)} 年，一共 ${esc(ws.length)} 個時間窗，其中 ${esc(majorN)} 個是重大時間窗。</p>
+    ${summaryHTML}
+    ${beforeHTML}
+    <p>你的人生裡，大約 ${esc(Math.round((t.coverage.major || 0) * 100))}% 的日子落在某個重大時間窗裡，時間窗很常見，對不對得上，請用你自己的貼文判斷。</p>
+  </div>
+  <details class="tl-src"><summary>資料來源與可信度</summary>
+    <p><b>這張星盤從哪裡來</b>　行星位置用開源天文函式庫 Astronomy Engine 計算，和專業占星軟體使用的 Swiss Ephemeris 逐一比對，誤差不到 1 角分，時區使用國際通用的 IANA 時區資料庫，包含台灣過去的日光節約時間。</p>
+    <p><b>解讀規則怎麼來</b>　土星回歸，木星回歸，天王星和冥王星經過上升與天頂，這些人生週期是西洋占星長期使用的技法，每一種代表的意思我們事先寫好，對每個人都一樣，不會看了你的資料才挑好聽的說。</p>
+    <p><b>為什麼值得參考</b>　每一個時間點旁邊，都放著你那段時間真的寫過的貼文，對不對得上由你自己判斷，對不上的也會照實列出來。</p>
+    <p><b>它不是什麼</b>　占星是一套詮釋人生的語言，不是預言，科學研究也沒有證實它能預測未來，我們用它幫你找到看自己人生的另一個角度。</p>
+  </details>`;
+
+  const now = t.now || Date.now();
+  let all = false;
+
+  const drawGroups = () => {
+    const pastWindows = ws
+      .filter(w => w.start <= now)
+      .sort((a, b) => a.start - b.start);
+    const futureWindows = ws
+      .filter(w => w.start > now)
+      .sort((a, b) => a.start - b.start);
+
+    const visible = w =>
+      all || (!w.before && (w.major || (w.start <= now && w.hit)));
+
+    out.querySelectorAll('.tl-group,.tl-toggle').forEach(e => e.remove());
+
+    const group = (title, arr, note) => {
+      const shown = arr.filter(visible);
+      if (!shown.length) return '';
+
+      return `<section class="tl-group">
+        <h4>${title}${note ? `<small>${note}</small>` : ''}</h4>
+        ${shown.map(w => tlItem(w, w.start <= now && !!summary)).join('')}
+      </section>`;
+    };
+
+    out.insertAdjacentHTML(
+      'beforeend',
+      group('已經走過的', pastWindows, '') +
+      group('接下來五年', futureWindows, '占星傳統的說法，不是預測。')
+    );
+
+    const hidden = ws.filter(w => !visible(w)).length;
+    if (hidden) {
+      const button = document.createElement('button');
+      button.className = 'tl-toggle';
+      button.textContent = `顯示全部 ${ws.length} 個時間窗`;
+      button.onclick = () => {
+        all = !all;
+        drawGroups();
+      };
+      out.appendChild(button);
+    }
+  };
+
+  drawGroups();
+}
+function tlRoundRect(c, x, y, w, h, r) {
+  c.beginPath(); c.roundRect(x, y, w, h, r); c.fill();
+}
+
+function drawTimelineScreen() {
+  beginScreen();
+
+  if (!ALTASTRO || !ALTASTRO.tl) {
+    drawIdle();
+    return;
+  }
+
+  const t = ALTASTRO.tl;
+  const ws = t.windows || [];
+  const range = t.range;
+  const lo = range.from;
+  const hi = range.to;
+  const span = Math.max(1, hi - lo);
+  const x = ts => 160 + clamp((ts - lo) / span, 0, 1) * 1600;
+
+  const lanes = {
+    structure: 290,
+    breakthrough: 348,
+    transform: 406,
+    expand: 464,
+    dream: 522,
+    review: 580
+  };
+
+  const colors = {
+    structure: '#C9A96E',
+    breakthrough: '#9FB3CC',
+    transform: '#B98CA6',
+    expand: '#A9C08F',
+    dream: '#8FA8C9',
+    review: '#C4BDB1'
+  };
+
+  txt('人生時間軸', 120, 110, {
+    size: 56,
+    weight: 300,
+    fam: 'sans',
+    color: C.screen,
+    align: 'left',
+    track: 5
+  });
+
+  txt(`${new Date(lo).getFullYear()}～${new Date(hi).getFullYear()}　重大星象與人生貼文`, 120, 158, {
+    size: 24,
+    weight: 300,
+    fam: 'sans',
+    color: C.dust,
+    align: 'left'
+  });
+
+  if (t.summary) {
+    const n = Math.round((t.summary.baseline || 0) * (t.summary.past || 0));
+    txt(`${t.summary.hits || 0} 個時間窗對得上（隨機時間段平均 ${n} 個）`, 760, 158, {
+      size: 22,
+      weight: 300,
+      fam: 'sans',
+      color: C.dust,
+      align: 'left'
+    });
+  }
+
+  const legend = [
+    ['structure', '結構'],
+    ['breakthrough', '突破'],
+    ['transform', '轉化'],
+    ['expand', '擴張'],
+    ['dream', '理想'],
+    ['review', '回顧']
+  ];
+
+  legend.forEach(([tone, label], i) => {
+    const lx = 1190 + i * 118;
+    cx.fillStyle = colors[tone];
+    cx.globalAlpha = 1;
+    cx.fillRect(lx, 110, 22, 22);
+    txt(label, lx + 30, 128, {
+      size: 22,
+      weight: 300,
+      fam: 'sans',
+      color: C.screen,
+      align: 'left'
+    });
+  });
+
+  cx.strokeStyle = C.dust;
+  cx.globalAlpha = .65;
+  cx.lineWidth = 2;
+  cx.beginPath();
+  cx.moveTo(160, 620);
+  cx.lineTo(1760, 620);
+  cx.stroke();
+
+  const y0 = new Date(lo).getFullYear();
+  const y1 = new Date(hi).getFullYear();
+
+  for (let y = Math.ceil(y0 / 5) * 5; y <= y1; y += 5) {
+    const ts = new Date(y, 0, 1).getTime();
+    const xx = x(ts);
+
+    cx.beginPath();
+    cx.moveTo(xx, 612);
+    cx.lineTo(xx, 628);
+    cx.stroke();
+
+    txt(String(y), xx, 655, {
+      size: 22,
+      weight: 300,
+      fam: 'sans',
+      color: C.dust,
+      align: 'center'
+    });
+  }
+
+  const nx = x(t.now);
+  cx.strokeStyle = ALTC;
+  cx.globalAlpha = .8;
+  cx.setLineDash([5, 7]);
+  cx.beginPath();
+  cx.moveTo(nx, 235);
+  cx.lineTo(nx, 650);
+  cx.stroke();
+  cx.setLineDash([]);
+
+  txt('現在', nx, 220, {
+    size: 22,
+    weight: 400,
+    fam: 'sans',
+    color: ALTC,
+    align: 'center'
+  });
+
+  ws.forEach(w => {
+    const tone = tlTone(w);
+    const col = colors[tone] || colors.review;
+    const xx = x(w.start);
+    const yy = lanes[tone] || lanes.review;
+
+    cx.fillStyle = col;
+    cx.globalAlpha = w.major ? .9 : .28;
+
+    if (w.kind === 'progression') {
+      cx.beginPath();
+      cx.moveTo(xx, 620);
+      cx.lineTo(xx + 10, 630);
+      cx.lineTo(xx, 640);
+      cx.lineTo(xx - 10, 630);
+      cx.closePath();
+      cx.fill();
+    } else {
+      tlRoundRect(cx, xx, yy - 14, Math.max(8, x(w.end) - xx), 28, 7);
+    }
+
+    if (w.start <= t.now && w.hit) {
+      cx.globalAlpha = .95;
+      cx.beginPath();
+      cx.arc(xx, 650, 5, 0, Math.PI * 2);
+      cx.fill();
+    }
+  });
+
+  cx.globalAlpha = 1;
+
+  const pastMajor = ws
+    .filter(w => w.start <= t.now && w.major)
+    .sort((a, b) => b.start - a.start);
+
+  const selected = [];
+  const hitMajor = pastMajor.filter(w => w.hit).slice(0, 3);
+  selected.push(...hitMajor);
+
+  for (const w of pastMajor) {
+    if (selected.length >= 3) break;
+    if (!selected.includes(w)) selected.push(w);
+  }
+
+  selected.forEach((w, i) => {
+    const yy = 715 + i * 92;
+    const tone = tlTone(w);
+
+    txt(tlTitle(w), 180, yy, {
+      size: 26,
+      weight: 400,
+      fam: 'serif',
+      color: colors[tone] || C.screen,
+      align: 'left'
+    });
+
+    txt(tlDate(w), 180, yy + 32, {
+      size: 22,
+      weight: 300,
+      fam: 'sans',
+      color: C.dust,
+      align: 'left'
+    });
+
+    const p = w.posts && (w.posts.find(post => post.hit === true) || w.posts[0]);
+    if (p) {
+      wrap(p.text, 850, 22, 300, 'sans')
+        .slice(0, 2)
+        .forEach((line, j) => {
+          txt(line, 520, yy + j * 28, {
+            size: 22,
+            weight: 300,
+            fam: 'sans',
+            color: C.screen2,
+            align: 'left'
+          });
+        });
+    }
+  });
+
+  txt('占星傳統的說法，不是預測，對不對得上請看你自己的貼文', 960, 1010, {
+    size: 24,
+    weight: 300,
+    fam: 'sans',
+    color: ALTD,
+    align: 'center',
+    track: 2
+  });
+}
+async function makeTimeline() {
+  if (!ALTASTRO || !ALTASTRO.chart) return;
+  const btn = $('#bTimeline'), bar = $('#tlBar'), fill = bar && bar.querySelector('i');
+  btn.disabled = true; bar.hidden = false; if (fill) fill.style.width = '0%';
+  $('#astroErr').textContent = '';
+  try {
+    const result = await lifeTimelineAsync(ALTASTRO.chart, {}, f => {
+      if (fill) fill.style.width = `${clamp(f, 0, 1) * 100}%`;
+    });
+    let summary = null;
+    if (L && !L.demo && !L.showcase) {
+      summary = matchPosts(result.windows, L.posts, { badKinds: BAD_KINDS, rules: TL_RULES, now: result.now });
+    }
+    ALTASTRO.tl = { windows: result.windows, coverage: result.coverage, range: result.range, now: result.now, summary };
+    renderTimeline();
+    setScreen(drawTimelineScreen);
+    btn.textContent = '重新排一次';
+  } catch (e) {
+    console.error(e);
+    $('#astroErr').textContent = '時間軸計算失敗，請檢查出生資料。';
+  } finally {
+    btn.disabled = false; bar.hidden = true;
+  }
+}
+
+$('#bTimeline').addEventListener('click', makeTimeline);
 $('#bChart').addEventListener('click', makeChart);
 $('#bChartAI').addEventListener('click', runChartAI);
 $('#bChartClear').addEventListener('click', clearChart);
@@ -4125,6 +6167,14 @@ async function runAlt() {
   $('#altErr').textContent = '';
   const s = SAMPLE || await sampleReady;
   if (!s) { $('#altErr').textContent = '這個頁面目前沒辦法呼叫 GMI 模型。'; return; }
+  if (ALTASTRO && !ALTASTRO.tl) {
+    try {
+      const result = await lifeTimelineAsync(ALTASTRO.chart, {});
+      ALTASTRO.tl = { windows: result.windows, coverage: result.coverage, range: result.range, now: result.now, summary: null };
+    } catch (e) {
+      console.warn('life timeline unavailable', e);
+    }
+  }
   $('#busyT').textContent = '推演中，銀幕上的小路正在分岔'; $('#busyN').textContent = '通常需要三十秒到一分鐘。';
   $('#altForm').hidden = true; $('#altBusy').hidden = false;
   altCtl = new AbortController();
