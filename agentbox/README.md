@@ -1,6 +1,10 @@
 # 人生電影院 Reelme：GMI Agentbox 版
 
+**繁體中文** · [English](README.en.md)
+
 這個資料夾是人生電影院部署到 GMI Agentbox 的版本，以下是完整的專案介紹，和 [repo 首頁](../README.md) 的說明相同。
+
+> **English:** the full guide in English, including installation, usage and troubleshooting, is in [README.en.md](README.en.md).
 
 人生電影院是一個網頁，它會讀一個人多年來在 Facebook 寫下的貼文和照片，替他蓋一座可以走進去的 3D 電影院，再剪成一部關於他人生的電影。
 
@@ -18,16 +22,15 @@
 2. 滑鼠滑過座位，銀幕會預覽那個月，點下去就能讀那個月的貼文。
 3. 按右下角的「開演」，看完整的電影。
 
-**In English.** Reelme is a web app that reads the posts and photos someone has shared on Facebook over the years, builds them a 3D cinema you can walk into, and cuts their life into a film. I'm Hans Lin, and the version here is made from my own 15 years of posts (7,470 of them), where every seat is a month of my life. AI directed the film and wrote the narration, while every quote on screen is my own words, unedited. The music, stills, motion shots and subtitles were all made by models on GMI Cloud through a single API key, for about US$75 in credits. This folder packages the cinema for GMI Agentbox, so you can deploy it yourself and its AI features run on GMI's models.
-
 ## 目錄
 
 1. [為什麼做這個專案](#一為什麼做這個專案)
 2. [這個專案做了什麼](#二這個專案做了什麼)
 3. [用了哪些技術](#三用了哪些技術)
 4. [怎麼使用](#四怎麼使用)
-5. [隱私](#五隱私)
-6. [使用範圍](#六使用範圍)
+5. [疑難排解](#五疑難排解)
+6. [隱私](#六隱私)
+7. [使用範圍](#七使用範圍)
 
 ---
 
@@ -323,6 +326,12 @@ docker build -t reelme-agentbox agentbox
 docker run -p 8080:8080 -e GMI_MAAS_API_KEY=你的金鑰 reelme-agentbox
 ```
 
+也可以直接執行已經建好的映像檔：
+
+```bash
+docker run -p 8080:8080 -e GMI_MAAS_API_KEY=你的金鑰 ghcr.io/hansai-art/reelme-agentbox:latest
+```
+
 沒有金鑰也能啟動，放映廳，電影和示範場的平行人生都能看，只是使用 AI 功能時會顯示服務無法使用。
 
 ### 5. 換模型與調整限制
@@ -364,7 +373,81 @@ Content-Type: application/json
 
 ---
 
-## 五、隱私
+## 五、疑難排解
+
+### 部署
+
+**`/health` 顯示 `"key": false`，AI 功能都顯示服務無法使用**
+
+- 原因：伺服器沒有拿到 `GMI_MAAS_API_KEY`。
+- 在 Agentbox 上：確認這個 Agent 有使用 GMI MaaS，金鑰會自動帶入，設定改完要重新部署一次。
+- 在自己的電腦上：啟動前要先設定 `GMI_MAAS_API_KEY`，參考上面「在你自己的電腦上執行」的指令。
+
+**Agentbox 的健康檢查一直失敗，容器反覆重啟**
+
+- Port 必須填 `8080`，健康檢查路徑必須是 `/health`。
+- 伺服器啟動後大約一秒就能回應，記錄檔第一行會出現 `Reelme on :8080 key=set`，沒有這一行代表程式沒有啟動成功，請看記錄檔裡的錯誤訊息。
+- 映像檔是 linux/amd64，執行環境要支援這個架構。
+
+**在 Apple Silicon 的 Mac 上用 Docker 執行，出現 `exec format error` 或架構警告**
+
+- 映像檔是 linux/amd64，執行時加上 `--platform linux/amd64`，或改用 Python 直接執行。
+
+**在自己的電腦上啟動時出現 `Address already in use`**
+
+- 8080 port 已經被其他程式佔用，啟動時換一個 port，例如 `PORT=8090 python3 server.py`。
+
+### AI 功能
+
+**AI 回報「GMI 模型目前太忙或已達使用上限」**
+
+- 同一個 IP 十分鐘內的 AI 請求超過上限（預設 80 次），等十分鐘再試，或調高 `REELME_RATE_PER_10MIN`。
+- 如果是 GMI 那邊暫時忙碌，伺服器會自動換成備用模型，全部都失敗才會回報錯誤。
+
+**AI 一直失敗，記錄檔出現 `recast: 模型名稱 HTTP 404` 或 `HTTP 403`**
+
+- 這個模型在你的 GMI 帳號或區域無法使用，到 GMI Cloud 的模型列表確認可用的模型名稱，再用 `REELME_MODELS_DEFAULT`，`REELME_MODELS_COMPLEX`，`REELME_MODELS_VISION` 和 `REELME_MODELS_QUICK` 換成可用的模型。
+- 出現 `HTTP 401` 代表金鑰無效或已經過期。
+
+**AI 剪輯跑很久**
+
+- 正常需要三到八分鐘，貼文越多越久，網頁會一直顯示進度，可以先去放映廳逛逛。
+- 超過十五分鐘都沒有進度，按「停止」再重新開始，並查看記錄檔有沒有 `recast` 開頭的訊息。
+
+**AI 回報「AI 回來的內容格式不完整」**
+
+- 模型偶爾會輸出不完整的 JSON，再試一次通常就會成功。
+- 如果經常發生，可以把 `REELME_MODELS_COMPLEX` 的第一個模型換成更強的模型，或調高 `REELME_MAX_TOKENS`，避免回答被截斷。
+
+### 網頁
+
+**放映廳一片黑，或畫面非常卡**
+
+- 3D 放映廳需要 WebGL，請用電腦版的 Chrome 或 Edge，並確認瀏覽器的硬體加速有打開。
+- 按右上角的「畫質」降低畫質，不支援 WebGL 的裝置會自動改用平面模式，只顯示銀幕。
+
+**3D 放映廳沒有出現，或放入 ZIP 時顯示「解壓元件沒有載入」**
+
+- 網頁會從 `cdn.jsdelivr.net` 載入 three.js，zip.js 和星盤計算元件，公司網路或防火牆擋住這個網域時就會缺零件，請換一個網路，或請網管開放 `cdn.jsdelivr.net`。
+
+**沒有聲音**
+
+- 瀏覽器在你點擊網頁之前不會播放聲音，先點一下畫面，再確認右上角的「聲音」是開的。
+
+**放入 Facebook 匯出檔之後沒有反應，或讀不到貼文**
+
+- 匯出時格式要選 JSON，HTML 格式讀不了。
+- Facebook 拆成好幾個 ZIP 時，要一次全部選取。
+- 匯出檔有好幾 GB 時，請用記憶體足夠的電腦版瀏覽器，手機可能處理不完。
+
+**線上預覽裡的 AI 功能要求登入**
+
+- 線上預覽放在 Claude 上，在那裡使用 AI 功能需要登入 Claude，並會用到你自己的 Claude 額度。
+- 想完全不依賴 Claude，可以部署到 Agentbox，或在自己的電腦上執行。
+
+---
+
+## 六、隱私
 
 因為用的是我自己的真實資料，隱私是第一關，原則是 AI 先標出可能有問題的內容，最後由我決定。
 
@@ -377,7 +460,7 @@ Content-Type: application/json
 
 ---
 
-## 六、使用範圍
+## 七、使用範圍
 
 - 程式碼歡迎參考，想用在自己的專案裡，請先透過 GitHub [@hansai-art](https://github.com/hansai-art) 跟我聯絡。
 - `static/` 裡的貼文，照片，配樂和影片都屬於我本人，只用來展示這個專案，請不要轉載，拿去訓練模型，或用在其他用途。
