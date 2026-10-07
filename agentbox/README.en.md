@@ -66,6 +66,26 @@ Agentbox is GMI Cloud's hosting service for AI agents. You give it a Docker imag
 
 This project is also what I'm presenting at GMI Cloud Day APAC on 29 October 2026.
 
+**Why it's called Reelme in English and 人生電影院 in Chinese.**
+
+人生電影院 literally means "life cinema": 人生 is "life" and 電影院 is "cinema". I chose the Chinese name first, from a list of candidates that all paired 人生 with a noun, such as 人生年輪 (tree rings), 人生本事 (the old word for a film's printed synopsis) and 人生首映會 (premiere). Then I looked for an English name. It had to be short, made of two words joined together, and easy to say.
+
+Reelme is reel plus me. A reel is a roll of film, so a film, and me is me, so together it means "my reel". It is pronounced REEL-me, which sounds almost exactly like "real me".
+
+So the two names are not translations of each other. They split the work: the Chinese name says plainly what this is, so people in Taiwan get it at a glance, and the English name is short, easy to remember and say, and works as a web address and identifier.
+
+What ties them together is the idea behind the whole project: cinemas show made-up stories, but this one only shows true ones.
+
+| In the Chinese name | In the English name | What it says |
+|---|---|---|
+| 電影院 (cinema) | reel, a roll of film | This is a film |
+| 人生 (life) | me | You are the main character |
+| The cinema's one rule: true stories only | "real me", the way it sounds | What's on screen really happened |
+
+The idea is built into the film. It opens with a card modeled on Taiwan's film rating certificate: "This film has passed the Life Cinema screening review" 「本片已通過人生電影院放映審查」. Then comes "This film is adapted from a true story" 「本片根據真實故事改編」. The words for "based on" and "adapted" (根據, 改編) fade out, "is" (就是) fades in, and the line becomes "This film is a true story" 「本片就是真實故事」.
+
+The last card of the film shows Reelme and "a cinema that shows only true stories" 「一間只放真實故事的戲院」. The two parallel-life films are labeled 「虛構」 (fiction) and shown apart from the real film.
+
 ---
 
 ## 2. What it does
