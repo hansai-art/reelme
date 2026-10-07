@@ -1514,7 +1514,12 @@ function drawQuote(c, u, a) {
 }
 
 /* ---------- 輸出影片用：中英雙語字卡、原文貼文卡（預設關閉，網頁放映不受影響） ---------- */
-let SUB_EN = null, POSTCARD = false, POST_AVATAR = null;
+let SUB_EN = null, POSTCARD = true, POST_AVATAR = null, POST_AVATAR_FOR = null;  // 引用一律還原成原文貼文卡
+function postAvatar() {
+  const Lx = FILM && FILM.L;
+  if (!POST_AVATAR && Lx && Lx.meM && POST_AVATAR_FOR !== Lx) { POST_AVATAR_FOR = Lx; getPhoto(Lx, Lx.meM).then(img => { if (POST_AVATAR_FOR === Lx && img) POST_AVATAR = img; }).catch(() => {}); }
+  return POST_AVATAR;
+}
 const EN = s => (SUB_EN && s && SUB_EN[s]) || null;
 const ENC = '#BDB4A7', EN_NUM = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'];
 const enLines = (s, w, size, max = 3) => s ? wrapBal(s, w, size, 300, 'sans').slice(0, max) : [];
@@ -1663,16 +1668,20 @@ function pcLayout(toks, maxW, size) {
 }
 function roundRect(x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
 function drawGlobe(x, y, r, col) { cx.save(); cx.strokeStyle = col; cx.lineWidth = 1.6; cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.stroke(); cx.beginPath(); cx.ellipse(x, y, r * .45, r, 0, 0, Math.PI * 2); cx.stroke(); cx.beginPath(); cx.moveTo(x - r, y); cx.lineTo(x + r, y); cx.stroke(); cx.restore(); }
-function drawEvPost(c, u, a) {
+function drawEvPost(c, u, a, o = {}) {
   const g = evGroup(c), t = c.t0 + u, p = c.post, ph = c.ph;
+  const cardX = o.cx ?? 960, CW = o.cw ?? (ph ? 1000 : 1080), maxL = o.maxL ?? (ph ? 4 : 10), yMid = o.yMid ?? 540;
   const ga = clamp(Math.min((t - g.t0) / 450, (g.t1 - t) / 450), 0, 1), rise = (1 - easeOut(clamp((t - g.t0) / 800, 0, 1))) * 22;
-  if (ph) drawBgPlate(ph, t - g.t0, g.t1 - g.t0, ga);
-  else { cx.save(); cx.globalAlpha = ga; cx.fillStyle = rad(cx, 960, 520, 80, 1150, [[0, '#1C1A18'], [1, '#090807']]); cx.fillRect(0, 0, 1920, 1080); cx.restore(); }
-  const en = EN(c.qt), es = 31, el = enLines(en, 1560, es, 3), elh = es * 1.42;
-  const CW = ph ? 1000 : 1080, PAD = 46, TS = ph ? 30 : 32, LH = TS * 1.58, AV = 64;
+  if (!o.noBg) {
+    if (ph) drawBgPlate(ph, t - g.t0, g.t1 - g.t0, ga);
+    else if (o.bg) drawBgPlate(o.bg, t - g.t0, g.t1 - g.t0, ga);
+    else { cx.save(); cx.globalAlpha = ga; cx.fillStyle = rad(cx, 960, 520, 80, 1150, [[0, '#1C1A18'], [1, '#090807']]); cx.fillRect(0, 0, 1920, 1080); cx.restore(); }
+  }
+  const en = o.noEN ? null : EN(c.qt), es = 31, el = enLines(en, 1560, es, 3), elh = es * 1.42;
+  const PAD = 46, TS = ph ? 30 : 32, LH = TS * 1.58, AV = 64;
   const bottom = el.length ? 1080 - 58 - (el.length - 1) * elh - es * .5 - 34 : 1036, top = 44;
   if (!c._pc) {
-    const text = pcText(p), segCur = c.qt.slice(1, -1).split('……'), maxL = ph ? 4 : 10;
+    const text = pcText(p), segCur = c.qt.slice(1, -1).split('……');
     let lay = null;
     for (const [b, f] of [[70, 50], [40, 30], [20, 14], [0, 0]]) { lay = pcLayout(pcTokens(text, g.segs, segCur, b, f), CW - PAD * 2, TS); if (lay.lines.length <= maxL) break; }
     if (lay.lines.length > maxL) lay.lines = lay.lines.slice(0, maxL);
@@ -1682,13 +1691,14 @@ function drawEvPost(c, u, a) {
   const headH = PAD + AV + 26, footH = 76;
   let phH = 0;
   if (ph && ph.img) { const [iw, ih] = dimsOf(ph.img); phH = Math.min(CW * ih / iw, bottom - top - headH - textH - footH - 24); phH = Math.max(160, phH); }
-  const CH = headH + textH + (phH ? phH + 22 : 14) + footH, x0 = 960 - CW / 2, y0 = Math.max(top, Math.min(540 - CH / 2 - (el.length ? 40 : 0), bottom - CH)) + rise;
+  const CH = headH + textH + (phH ? phH + 22 : 14) + footH, x0 = cardX - CW / 2;
+  const y0 = Math.max(top, Math.min(yMid - CH / 2 - (el.length ? 40 : 0), bottom - CH)) + rise;
   cx.save(); cx.globalAlpha = ga;
   cx.shadowColor = 'rgba(0,0,0,.55)'; cx.shadowBlur = 48; cx.shadowOffsetY = 18; cx.fillStyle = PC.bg; roundRect(x0, y0, CW, CH, 18); cx.fill();
   cx.shadowColor = 'transparent';
   const ax = x0 + PAD + AV / 2, ay = y0 + PAD + AV / 2;
   cx.save(); cx.beginPath(); cx.arc(ax, ay, AV / 2, 0, Math.PI * 2); cx.clip(); cx.fillStyle = '#3A3B3C'; cx.fillRect(ax - AV / 2, ay - AV / 2, AV, AV);
-  if (POST_AVATAR) { const [iw, ih] = dimsOf(POST_AVATAR), s = Math.max(AV / iw, AV / ih) * 1.25, w = iw * s, h = ih * s; cx.drawImage(POST_AVATAR, ax - w / 2, ay - h * .36, w, h); }
+  const AVI = postAvatar(); if (AVI) { const [iw, ih] = dimsOf(AVI), s = Math.max(AV / iw, AV / ih) * 1.25, w = iw * s, h = ih * s; cx.drawImage(AVI, ax - w / 2, ay - h * .36, w, h); }
   cx.restore(); cx.restore();
   const d = new Date(p.ts), date = p.bd ? `${d.getFullYear()}年${d.getMonth() + 1}月` : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   txt(FILM.L.name, x0 + PAD + AV + 18, ay - 14, { size: 27, weight: 500, fam: 'sans', color: PC.name, alpha: ga, align: 'left' });
@@ -1719,7 +1729,36 @@ function drawEvPost(c, u, a) {
   ['讚', '留言', '分享'].forEach((s, i) => txt(s, x0 + CW * (i + .5) / 3, fy + 6 + (footH - 6) / 2, { size: 22, weight: 500, fam: 'sans', color: PC.meta, alpha: ga, track: 2 }));
   const ke = a * clamp((u - 700) / 600, 0, 1), yE = 1080 - 58 - (el.length - 1) * elh;
   el.forEach((ln, i) => txt(ln, 960, yE + i * elh, { size: es, weight: 300, fam: 'sans', color: '#DDD6CB', alpha: ke, track: .3 }));
+  return { x: x0, y: y0, w: CW, h: CH };
 }
+function postCue(c, post, qt, t0, t1) {
+  const key = c.type === 'callback' ? null : '_pcue';
+  if (key && c[key]) return c[key];
+  let s = String(qt ?? post.flat ?? '').trim();
+  if (!(s.startsWith('「') && s.endsWith('」'))) s = '「' + s.slice(0, 80) + '」';
+  const pc = { type: 'ev', post, qt: s, ph: null, t0, t1, dur: t1 - t0, _grp: { t0, t1, segs: s.slice(1, -1).split('……') } };
+  if (key) c[key] = pc;
+  return pc;
+}
+function drawLinePost(c, u, a) {
+  const first = String(c.post.flat || '').match(/^[^，。！？!?\n]{4,40}/), pc = postCue(c, c.post, c.qt || (first ? first[0] : c.post.flat), c.t0, c.t1);
+  const r = drawEvPost(pc, u, a, { bg: c.bgPh, noEN: !SUB_EN });
+  if (c.caption && !c.caption.startsWith('林思翰的臉書')) txt(c.caption, 960, r.y + r.h + 46, { size: 25, weight: 300, fam: 'sans', color: C.dust, alpha: a * clamp((u - 1400) / 800, 0, 1), track: 4 });
+}
+function drawCallbackPost(c, u, a) {
+  const cb = c.cb, bgA = a * clamp(Math.min(u / 450, (c.dur - u) / 450), 0, 1);
+  if (c.bgPh) drawBgPlate(c.bgPh, u, c.dur, bgA);
+  else { cx.save(); cx.globalAlpha = bgA; cx.fillStyle = rad(cx, 960, 520, 80, 1150, [[0, '#1C1A18'], [1, '#090807']]); cx.fillRect(0, 0, 1920, 1080); cx.restore(); }
+  const setup = c._pcueA || (c._pcueA = postCue(c, cb.setup, cb.qa, c.t0, c.t1));
+  const payoff = c._pcueB || (c._pcueB = postCue(c, cb.payoff, cb.qb, c.t0 + 1900, c.t1));
+  let rs;
+  cx.save(); cx.globalAlpha *= a; rs = drawEvPost(setup, u, a, { cx: 510, cw: 840, maxL: 7, noBg: true, noEN: true }); cx.restore();
+  let rp = null;
+  if (u >= 1900) { cx.save(); cx.globalAlpha *= a; rp = drawEvPost(payoff, u - 1900, a, { cx: 1410, cw: 840, maxL: 7, noBg: true, noEN: true }); cx.restore(); }
+  const top = Math.min(rs.y, rp ? rp.y : rs.y), ka = a * clamp((u - 1900) / 800, 0, 1);
+  txt(`隔了 ${gapText(cb.gapDays)}`, 960, top - 40, { size: 25, weight: 300, fam: 'sans', color: C.dust, alpha: ka, track: 5 });
+}
+
 
 /* ---------- 示範場的導演版：旁白說故事，原文當佐證 ---------- */
 const SCQ = s => '「' + s.join('……') + '」';
@@ -1858,10 +1897,10 @@ function renderFilm(t) {
   switch (c.type) {
     case 'card': SUB_EN ? drawCardEN(u, a) : drawCard(u, a); break;
     case 'truth': SUB_EN ? drawTruthEN(u, 66, false, c.tm) : drawTruth(u, 66, false, c.tm); break;
-    case 'line': case 'quote': SUB_EN ? drawQuoteEN(c, u, a) : drawQuote(c, u, a); break;
+    case 'line': case 'quote': SUB_EN ? drawQuoteEN(c, u, a) : (POSTCARD && c.post ? drawLinePost(c, u, a) : drawQuote(c, u, a)); break;
     case 'act': SUB_EN ? drawActEN(c, a) : drawAct(c, a); break;
     case 'montage': drawMontage(c, u, a); break;
-    case 'callback': drawCallback(c, u, a); break;
+    case 'callback': POSTCARD && !SUB_EN && c.cb && c.cb.setup && c.cb.payoff ? drawCallbackPost(c, u, a) : drawCallback(c, u, a); break;
     case 'void': drawVoid(c, u, a); break;
     case 'photo': drawPhoto(c, u, a); break;
     case 'stat': drawStat(a); break;
@@ -3432,6 +3471,7 @@ function readErr(kind, info) {
   $('#errRetry').onclick = () => { $('#stagesbox').classList.remove('on'); BUSY = false; backToHall(); openUpload(); };
 }
 function afterNewLife() {
+  POST_AVATAR = null; POST_AVATAR_FOR = null;
   if (MOSAIC && MOSAIC.forL !== L) MOSAIC = null; if (MOSTILES && MOSTILES.forL !== L) MOSTILES = null; if (MOSTARGET && MOSTARGET.forL !== L) MOSTARGET = null;
   preloadMosaic(L, 3000);
   if (EDL && EDL.forL !== L) EDL = null;
@@ -6195,8 +6235,8 @@ async function runAlt() {
 let altDemoTok = null;
 async function runDemoAlt(id) {
   const BR = (id && branchById(id)) || (L.showcase && L.sc && L.sc.branch ? L.sc.branch : DEMO_BRANCH);
-  const p = L.textPosts.find(x => x.clean.includes(BR.forkText)); if (!p) return;
-  setFork(p, p.k); $('#altWhat').value = BR.what;
+  const fp = forkOf(BR); if (!fp) return;
+  setFork(fp.p, fp.k); $('#altWhat').value = BR.what;
   $('#altErr').textContent = '';
   $('#busyT').textContent = BR === DEMO_BRANCH ? '示範推演：先看分岔點，再看小路分岔' : '預先推演：先看分岔點，再看小路分岔';
   $('#busyN').textContent = BR === DEMO_BRANCH ? '示範用的是預先寫好的第二人生，不會呼叫 AI。' : '這一條第二人生是 Claude 依主演的真實貼文預先寫好的，不會再呼叫 AI。';
@@ -6327,6 +6367,12 @@ async function credBuf(Lx) {
 }
 function branchList(Lx) { return (Lx && Lx.sc && Lx.sc.branches) || null; }
 function branchById(id) { return (branchList(L) || []).find(b => b.id === id) || null; }
+/* 分岔點那一篇貼文如果因為隱私被隱藏，就退回分岔的月份，不讓按鈕失效 */
+function forkOf(B) {
+  const p = L.textPosts.find(x => x.clean.includes(B.forkText)); if (p) return { p, k: p.k };
+  const [y, m] = String(B.forkYM || '').split('.').map(Number);
+  return y && m ? { p: null, k: y * 12 + m - 1 } : null;
+}
 function syncForkBtn() {
   const b = $('#fFork'), c = FILM && FILM.cues[FILM.ci], B = c && c.fork && !FILM.alt && !FILM.tri ? branchById(c.fork) : null;
   if (B) { if (b.hidden || b.dataset.id !== B.id) { b.hidden = false; b.dataset.id = B.id; b.textContent = B.forkLabel; showFilmUI(); } }
@@ -6335,12 +6381,12 @@ function syncForkBtn() {
 function forkInto(id) {
   if (!FILM || FILM.alt || FILM.tri) return;
   const B = branchById(id); if (!B) return;
-  const p = L.textPosts.find(x => x.clean.includes(B.forkText)); if (!p) return;
+  const fp = forkOf(B); if (!fp) return;
   const c = FILM.cues[FILM.ci];
   RESUME = { t: c.t1, back: B.backText };
   $('#fFork').hidden = true; $('#freeze').hidden = true;
   stopFilm(); FILM = null;
-  ALT = { k: p.k, ts: p.ts, post: p };
+  ALT = { k: fp.k, ts: fp.p ? fp.p.ts : monthStart(fp.k) + 14 * DAY, post: fp.p };
   startShow(null, demoBranch(B), true);
 }
 function drawForkHint(c, u, a) {

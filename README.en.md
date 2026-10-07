@@ -91,11 +91,12 @@ The showcase film is called *Rarely Home*. Here is its logline.
 > A boy who had to burn his own comics later rarely went home. Fifteen years on, he built a home for many.
 
 - **AI wrote the narration, the quotes are unedited**: the film has six acts. The narration was written by AI, and every quote on screen is something I actually wrote on Facebook, word for word.
+- **Original post cards**: each quote is shown as the Facebook post it came from, with avatar, name and date, and the quoted sentences highlighted. Callbacks years apart show the two posts side by side.
 - **Every line has a source**: during playback, press and hold the screen or press the space bar to pause and see the original post and its date. Narration lists the posts it was based on.
 - **10-minute and 5-minute cuts**: both are drawn live by the web page, not pre-rendered video files.
 - **Original score**: MiniMax Music 3.0 composed instrumental music, with no lyrics, for each section. 8 of 23 tracks made the cut, and the climax of the last one lands exactly as the self-portrait comes together.
 - **Self-portrait**: 484 photos from over the years form a single face, shown at the end of the film.
-- **Event cut**: the version screened at the event is a separately exported 1080p video. It opens with a 25-second walkthrough of the website, shows each quote highlighted on the original post, and adds Chinese and English subtitles. The third and fourth images under "Screenshots" come from this cut.
+- **Event cut**: the version screened at the event is a separately exported 1080p video. It opens with a 25-second walkthrough of the website and adds Chinese and English subtitles. The third and fourth images under "Screenshots" come from this cut.
 
 ### 2.3 Parallel lives: what if I had taken the other road
 
@@ -145,7 +146,7 @@ Once the chart is drawn, there is one more advanced feature, still in beta: the 
 | ![The hall](agentbox/docs/01-hall.jpg) | ![Taking a seat](agentbox/docs/02-seat.jpg) |
 | **The hall** Each row is a year and each seat a month. Hover over a seat to preview that month on the screen. | **Taking a seat** Click a seat, the camera flies in, and you read what was written that month. |
 | ![Title card](agentbox/docs/03-title.jpg) | ![Original post card](agentbox/docs/04-post-card.jpg) |
-| ***Rarely Home*** The event cut, with Chinese and English subtitles. | **Original post card** In the event cut, each quote is highlighted on the original post. |
+| ***Rarely Home*** The event cut, with Chinese and English subtitles. | **Original post card** Each quote is highlighted on the original post. |
 | ![Self-portrait](agentbox/docs/05-self-portrait.jpg) | ![Parallel lives](agentbox/docs/06-parallel-lives.jpg) |
 | **Self-portrait** A face made of 484 photos. | **Parallel lives** If I had stayed in Kaohsiung, or gone to Vancouver. |
 
