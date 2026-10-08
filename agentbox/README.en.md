@@ -93,7 +93,7 @@ The showcase film is called *Rarely Home*. Here is its logline.
 > A boy who had to burn his own comics later rarely went home. Fifteen years on, he built a home for many.
 
 - **AI wrote the narration, the quotes are unedited**: the film has six acts. The narration was written by AI, and every quote on screen is something I actually wrote on Facebook, word for word.
-- **Original post cards**: each quote is shown as the Facebook post it came from, with avatar, name and date, and the quoted sentences highlighted. Callbacks years apart show the two posts side by side.
+- **Original post cards**: each quote is shown as the Facebook post it came from, with avatar, name and date, and the quoted sentences highlighted. Callbacks years apart show the two posts side by side. The invented posts in the parallel lives use the same card, marked 「虛構」 (fiction).
 - **Every line has a source**: during playback, press and hold the screen or press the space bar to pause and see the original post and its date. Narration lists the posts it was based on.
 - **10-minute and 5-minute cuts**: both are drawn live by the web page, not pre-rendered video files.
 - **Original score**: MiniMax Music 3.0 composed instrumental music, with no lyrics, for each section. 8 of 23 tracks made the cut, and the climax of the last one lands exactly as the self-portrait comes together.

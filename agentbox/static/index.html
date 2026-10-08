@@ -988,7 +988,7 @@ async function getPhoto(Lx, m) {
   const img = new Image(); img.src = u; await img.decode();
   cachePut(m, img); return img;
 }
-const dimsOf = img => img ? [img.naturalWidth || img.width, img.naturalHeight || img.height] : [0, 0];
+const dimsOf = img => img ? [img.videoWidth || img.naturalWidth || img.width, img.videoHeight || img.naturalHeight || img.height] : [0, 0];
 /* 月份瀏覽：只配這一篇自己的照片，或同一天前後拍的照片；找不到就不配圖，寧可只有字，也不放一張無關的照片 */
 function monthPhoto(m, p) {
   if (!p) return m.imgs[0] || null;
@@ -1700,20 +1700,28 @@ function drawEvPost(c, u, a, o = {}) {
   cx.save(); cx.beginPath(); cx.arc(ax, ay, AV / 2, 0, Math.PI * 2); cx.clip(); cx.fillStyle = '#3A3B3C'; cx.fillRect(ax - AV / 2, ay - AV / 2, AV, AV);
   const AVI = postAvatar(); if (AVI) { const [iw, ih] = dimsOf(AVI), s = Math.max(AV / iw, AV / ih) * 1.25, w = iw * s, h = ih * s; cx.drawImage(AVI, ax - w / 2, ay - h * .36, w, h); }
   cx.restore(); cx.restore();
-  const d = new Date(p.ts), date = p.bd ? `${d.getFullYear()}年${d.getMonth() + 1}月` : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  const d = new Date(p.ts), date = o.date ?? (p.bd ? `${d.getFullYear()}年${d.getMonth() + 1}月` : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`);
   txt(FILM.L.name, x0 + PAD + AV + 18, ay - 14, { size: 27, weight: 500, fam: 'sans', color: PC.name, alpha: ga, align: 'left' });
-  txt(date + '　·', x0 + PAD + AV + 18, ay + 20, { size: 20, weight: 400, fam: 'sans', color: PC.meta, alpha: ga, align: 'left' });
-  cx.font = F(20, 400, 'sans'); const dw = cx.measureText(date + '　·').width; cx.save(); cx.globalAlpha = ga; drawGlobe(x0 + PAD + AV + 18 + dw + 14, ay + 20, 8, PC.meta); cx.restore();
+  const dateText = o.fiction ? date : date + '　·';
+  txt(dateText, x0 + PAD + AV + 18, ay + 20, { size: 20, weight: 400, fam: 'sans', color: PC.meta, alpha: ga, align: 'left' });
+  cx.font = F(20, 400, 'sans'); const dw = cx.measureText(dateText).width;
+  if (o.fiction) {
+    const px = x0 + PAD + AV + 18 + dw + 14, py = ay + 20 - 13;
+    cx.save(); cx.globalAlpha = ga; cx.strokeStyle = ALTD; cx.lineWidth = 1.4; roundRect(px, py, 58, 26, 13); cx.stroke(); cx.restore();
+    txt('虛構', px + 29, ay + 20, { size: 17, weight: 500, fam: 'sans', color: ALTD, alpha: ga, align: 'center', track: 4 });
+  } else {
+    cx.save(); cx.globalAlpha = ga; drawGlobe(x0 + PAD + AV + 18 + dw + 14, ay + 20, 8, PC.meta); cx.restore();
+  }
   [0, 1, 2].forEach(i => { cx.save(); cx.globalAlpha = ga; cx.fillStyle = PC.meta; cx.beginPath(); cx.arc(x0 + CW - PAD - 30 + i * 11, y0 + PAD + 14, 2.6, 0, Math.PI * 2); cx.fill(); cx.restore(); });
   const sw = clamp((u - 300) / 1100, 0, 1) * (n + .999), tx = x0 + PAD; let ly = y0 + headH + LH * .5;
-  const lit = cell => cell.hi === 2 ? clamp(sw - cell.n, 0, 1) : 0;
+  const lit = cell => !o.plain && cell.hi === 2 ? clamp(sw - cell.n, 0, 1) : 0;
   lines.forEach(l => {
     if (!l.length) { ly += LH * .5; return; }
     l.forEach(cell => { const k = lit(cell); if (k > 0) { cx.save(); cx.globalAlpha = ga * k; cx.fillStyle = PC.mark + '.42)'; cx.fillRect(tx + cell.x - .5, ly - TS * .66, cell.w + 1.2, TS * 1.3); cx.restore(); } });
     cx.save(); cx.font = F(TS, 400, 'sans'); cx.textBaseline = 'middle'; cx.textAlign = 'left';
     l.forEach(cell => {
       const k = lit(cell);
-      cx.globalAlpha = ga; cx.fillStyle = cell.hi === -1 ? PC.meta : cell.hi === 1 ? '#A9ACB1' : PC.dim; cx.fillText(cell.ch, tx + cell.x, ly);
+      cx.globalAlpha = ga; cx.fillStyle = cell.hi === -1 ? PC.meta : cell.hi === 1 ? '#A9ACB1' : o.plain && cell.hi === 0 ? PC.name : PC.dim; cx.fillText(cell.ch, tx + cell.x, ly);
       if (k > 0) { cx.globalAlpha = ga * k; cx.fillStyle = PC.hi; cx.fillText(cell.ch, tx + cell.x, ly); }
     });
     cx.restore(); ly += LH;
@@ -1731,6 +1739,37 @@ function drawEvPost(c, u, a, o = {}) {
   el.forEach((ln, i) => txt(ln, 960, yE + i * elh, { size: es, weight: 300, fam: 'sans', color: '#DDD6CB', alpha: ke, track: .3 }));
   return { x: x0, y: y0, w: CW, h: CH };
 }
+function drawAltShotPost(c, u, a) {
+  const shot = c.shot || {}, vid = shot.vid;
+  if (ALT_PLAYING && ALT_PLAYING !== vid) ALT_PLAYING.pause();
+  ALT_PLAYING = vid || null;
+  let media = null;
+  if (vid && (vid.readyState >= 2 || vid.seeking)) {
+    const sec = u / 1000, end = Number.isFinite(vid.duration) ? Math.max(0, vid.duration - .05) : sec;
+    const tt = Math.min(sec, end);
+    if (FILM.frozen || !FILM.running || sec >= end) { if (!vid.paused) vid.pause(); }
+    else if (vid.paused && !vid.seeking) vid.play().catch(() => {});
+    if (!vid.seeking && Math.abs(vid.currentTime - tt) > .8) { try { vid.currentTime = tt; } catch {} }
+    media = vid.readyState >= 2 ? vid : (shot.im || vid);
+  } else {
+    media = shot.im;
+  }
+  if (!c._apc) {
+    const s = c.s;
+    c._apc = { type: 'ev', post: { ts: new Date(s.y, s.m - 1, 15).getTime(), flat: s.text, clean: s.text, hidden: false, bd: true }, qt: '「」', t0: c.t0, t1: c.t1, dur: c.dur, _grp: { t0: c.t0, t1: c.t1, segs: [] }, ph: shot.im || vid ? { img: media, fx: .5, fy: .45, bg: shot.im ? photoBg(shot.im) : undefined } : null };
+  }
+  const pc = c._apc;
+  if (pc.ph) pc.ph.img = media;
+  return drawEvPost(pc, u, a, { fiction: true, plain: true, date: `${c.s.y}年${c.s.m}月` });
+}
+function drawAltQuotePost(c, u, a) {
+  if (!c._apc) {
+    const s = c.s;
+    c._apc = { type: 'ev', post: { ts: new Date(s.y, s.m - 1, 15).getTime(), flat: s.text, clean: s.text, hidden: false, bd: true }, qt: '「」', t0: c.t0, t1: c.t1, dur: c.dur, _grp: { t0: c.t0, t1: c.t1, segs: [] }, ph: null };
+  }
+  return drawEvPost(c._apc, u, a, { fiction: true, plain: true, date: `${c.s.y}年${c.s.m}月` });
+}
+
 function postCue(c, post, qt, t0, t1) {
   const key = c.type === 'callback' ? null : '_pcue';
   if (key && c[key]) return c[key];
@@ -1908,9 +1947,9 @@ function renderFilm(t) {
     case 'altCard': drawCard(u, a, { paper: '#B7BFC5', header: '本片為人生電影院平行放映', rows: [['片　名', FILM.br.title], ['主　演', FILM.L.name], ['分　岔', fmtYM(ALT.ts)], ['片　長', fmtDur(FILM.total)], ['級　別', '限本人觀賞　平行世界']] }); break;
     case 'truthRev': drawTruth(u, 66, true, c.tm); break;
     case 'fork': drawFork(c, u, a); break;
-    case 'altQuote': drawAltQuote(c, u, a); break;
+    case 'altQuote': POSTCARD && !SUB_EN ? drawAltQuotePost(c, u, a) : drawAltQuote(c, u, a); break;
     case 'altPhoto': drawAltPhoto(c, u, a); break;
-    case 'altShot': drawAltShot(c, u, a); break;
+    case 'altShot': POSTCARD && !SUB_EN ? drawAltShotPost(c, u, a) : drawAltShot(c, u, a); break;
     case 'twoLives': drawTwoLives(c, u, a); break;
     case 'keeps': drawKeeps(c, u, a); break;
     case 'chart': drawChartCue(c, u, a); break;
